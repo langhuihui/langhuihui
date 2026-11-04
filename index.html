@@ -527,6 +527,24 @@
   .proj--infer .proj-link.gh { color: #9a9ac0; border-color: rgba(154,154,192,.25); }
   .proj--infer:hover { border-color: rgba(102,126,234,.5); box-shadow: 0 20px 60px -20px rgba(102,126,234,.35); }
 
+  /* —— brief: vibe coding 历史动画 —— */
+  .proj--brief {
+    --p-accent: #fbbf24; --p-accent2: #ff7849;
+    background: linear-gradient(150deg, rgba(251,191,36,.08), rgba(12,14,22,.5));
+    border-color: rgba(251,191,36,.2);
+  }
+  .proj--brief::before { background: linear-gradient(90deg, #fbbf24, #ff7849); }
+  .proj--brief::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(251,191,36,.05) 39px, rgba(251,191,36,.05) 40px);
+    mask-image: linear-gradient(180deg, transparent 10%, #000 65%, transparent);
+  }
+  .proj--brief .proj-icon { background: rgba(251,191,36,.14); color: #fcd34d; border-color: rgba(251,191,36,.3); }
+  .proj--brief .proj-tagline { color: #fcd34d; }
+  .proj--brief .proj-link.site { color: #0b0f1c; background: #fbbf24; border-color: #fbbf24; }
+  .proj--brief .proj-link.site:hover { background: #fde68a; box-shadow: 0 0 20px rgba(251,191,36,.4); }
+  .proj--brief:hover { border-color: rgba(251,191,36,.45); box-shadow: 0 20px 60px -20px rgba(251,191,36,.3); }
+
   /* ============ 项目 SVG 图示 ============ */
   .proj-visual {
     width: 100%; height: 100px;
@@ -590,6 +608,13 @@
   /* gotask flow */
   @keyframes task-run { 0%{stroke-dashoffset:80} 100%{stroke-dashoffset:0} }
   .task-edge { stroke-dasharray:80; animation: task-run 1.5s linear infinite; }
+  /* brief: 胶片帧呼吸 + 时间轴播放头 */
+  @keyframes brief-frame-pulse { 0%,100% { fill-opacity: .14; } 50% { fill-opacity: .5; } }
+  .brief-frame { animation: brief-frame-pulse 1.6s ease-in-out infinite; }
+  @keyframes brief-scan { from { transform: translateX(0); } to { transform: translateX(272px); } }
+  @keyframes brief-timeline { from { stroke-dashoffset: 272; } to { stroke-dashoffset: 0; } }
+  .brief-playhead { animation: brief-scan 4s ease-in-out infinite alternate; }
+  .brief-progress { stroke-dasharray: 272; animation: brief-timeline 4s ease-in-out infinite alternate; }
 
   /* —— 基础库默认 —— */
   .proj--lib .proj-icon { background: rgba(255,255,255,.04); color: var(--dim); }
@@ -1245,6 +1270,56 @@
           </div>
         </div>
       </article>
+      <article class="proj proj--brief">
+        <a class="proj-main" href="https://brief.langhuihui.com/" target="_blank" rel="noopener">
+          <div class="proj-head">
+            <div class="proj-icon">BR</div>
+            <div>
+              <div class="proj-top" style="margin-bottom:0"><div class="proj-name">brief</div></div>
+              <div class="proj-tagline">An animated history of vibe coding</div>
+            </div>
+          </div>
+          <!-- SVG: 胶片帧 + 历史时间轴播放头 -->
+          <svg class="proj-visual" viewBox="0 0 300 90" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- 胶片帧 -->
+            <rect class="brief-frame" x="14" y="8" width="42" height="20" rx="3" fill="#fbbf24" stroke="rgba(251,191,36,.35)" stroke-width="1" style="animation-delay:0s"/>
+            <rect class="brief-frame" x="60" y="8" width="42" height="20" rx="3" fill="#fbbf24" stroke="rgba(251,191,36,.35)" stroke-width="1" style="animation-delay:.3s"/>
+            <rect class="brief-frame" x="106" y="8" width="42" height="20" rx="3" fill="#ff7849" stroke="rgba(255,120,73,.35)" stroke-width="1" style="animation-delay:.6s"/>
+            <rect class="brief-frame" x="152" y="8" width="42" height="20" rx="3" fill="#ff7849" stroke="rgba(255,120,73,.35)" stroke-width="1" style="animation-delay:.9s"/>
+            <rect class="brief-frame" x="198" y="8" width="42" height="20" rx="3" fill="#fcd34d" stroke="rgba(252,211,77,.35)" stroke-width="1" style="animation-delay:1.2s"/>
+            <rect class="brief-frame" x="244" y="8" width="42" height="20" rx="3" fill="#fcd34d" stroke="rgba(252,211,77,.35)" stroke-width="1" style="animation-delay:1.5s"/>
+            <!-- 播放标记 -->
+            <polygon points="274,14 274,22 282,18" fill="rgba(11,15,28,.75)"/>
+            <!-- 时间轴 -->
+            <line x1="14" y1="56" x2="286" y2="56" stroke="rgba(251,191,36,.25)" stroke-width="2"/>
+            <line class="brief-progress" x1="14" y1="56" x2="286" y2="56" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>
+            <!-- 里程碑节点 -->
+            <circle cx="14" cy="56" r="4" fill="rgba(251,191,36,.3)" stroke="#fbbf24" stroke-width="1.2"/>
+            <circle cx="82" cy="56" r="4" fill="rgba(251,191,36,.3)" stroke="#fbbf24" stroke-width="1.2"/>
+            <circle cx="150" cy="56" r="4" fill="rgba(255,120,73,.3)" stroke="#ff7849" stroke-width="1.2"/>
+            <circle cx="218" cy="56" r="4" fill="rgba(255,120,73,.3)" stroke="#ff7849" stroke-width="1.2"/>
+            <circle cx="286" cy="56" r="4" fill="rgba(252,211,77,.3)" stroke="#fcd34d" stroke-width="1.2"/>
+            <!-- 播放头 -->
+            <g class="brief-playhead">
+              <circle cx="14" cy="56" r="7" fill="#fbbf24"/>
+              <line x1="14" y1="34" x2="14" y2="47" stroke="#fbbf24" stroke-width="1" stroke-dasharray="2 2"/>
+            </g>
+            <!-- 阶段标签 -->
+            <text x="14" y="76" font-size="6" font-family="monospace" fill="rgba(252,211,77,.7)">CODE</text>
+            <text x="82" y="76" text-anchor="middle" font-size="6" font-family="monospace" fill="rgba(252,211,77,.7)">COMPLETE</text>
+            <text x="150" y="76" text-anchor="middle" font-size="6" font-family="monospace" fill="rgba(255,120,73,.7)">CHAT</text>
+            <text x="218" y="76" text-anchor="middle" font-size="6" font-family="monospace" fill="rgba(255,120,73,.7)">AGENT</text>
+            <text x="286" y="76" text-anchor="end" font-size="6" font-family="monospace" fill="rgba(252,211,77,.9)">VIBE</text>
+          </svg>
+          <div class="proj-desc">用动画回放 vibe coding 的演进史：从代码补全、对话式编程到 Agent 自主开发，一帧一帧看完这场范式迁移。</div>
+          <div class="proj-tags"><span class="tag">Animation</span><span class="tag m">Timeline</span><span class="tag v">Vibe Coding</span></div>
+        </a>
+        <div class="proj-foot">
+          <div class="proj-links">
+            <a class="proj-link site" href="https://brief.langhuihui.com/" target="_blank" rel="noopener">官网 →</a>
+          </div>
+        </div>
+      </article>
     </div>
   </div>
 
@@ -1333,45 +1408,6 @@
           <div class="proj-links">
             <a class="proj-link site" href="https://gotask.langhuihui.com/" target="_blank" rel="noopener">官网 →</a>
             <a class="proj-link gh" href="https://github.com/langhuihui/gotask" target="_blank" rel="noopener">GitHub</a>
-          </div>
-        </div>
-      </article>
-      <article class="proj proj--lib">
-        <a class="proj-main" href="https://brief.langhuihui.com/" target="_blank" rel="noopener">
-          <div class="proj-head">
-            <div class="proj-icon">br</div>
-            <div>
-              <div class="proj-top" style="margin-bottom:0"><div class="proj-name">brief</div></div>
-            </div>
-          </div>
-          <!-- SVG: 长文浓缩成一页简报 -->
-          <svg class="proj-visual" viewBox="0 0 300 70" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <!-- 原始长文 -->
-            <rect x="4" y="6" width="112" height="58" rx="5" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
-            <text x="12" y="17" font-size="6.5" font-family="monospace" fill="rgba(255,255,255,.35)">SOURCE</text>
-            <rect x="12" y="22" width="96" height="3" rx="1.5" fill="rgba(255,255,255,.18)"/>
-            <rect x="12" y="29" width="88" height="3" rx="1.5" fill="rgba(255,255,255,.14)"/>
-            <rect x="12" y="36" width="96" height="3" rx="1.5" fill="rgba(255,255,255,.18)"/>
-            <rect x="12" y="43" width="72" height="3" rx="1.5" fill="rgba(255,255,255,.14)"/>
-            <rect x="12" y="50" width="96" height="3" rx="1.5" fill="rgba(255,255,255,.18)"/>
-            <rect x="12" y="57" width="60" height="3" rx="1.5" fill="rgba(255,255,255,.14)"/>
-            <!-- 浓缩箭头 -->
-            <path d="M124,35 L166,35" stroke="rgba(163,230,53,.5)" stroke-width="1.2"/>
-            <polygon points="166,31 174,35 166,39" fill="rgba(163,230,53,.6)"/>
-            <text x="149" y="28" text-anchor="middle" font-size="6" font-family="monospace" fill="rgba(163,230,53,.55)">digest</text>
-            <!-- 简报输出 -->
-            <rect x="182" y="12" width="114" height="46" rx="5" fill="rgba(0,229,255,.05)" stroke="rgba(0,229,255,.3)" stroke-width="1.2"/>
-            <text x="190" y="23" font-size="6.5" font-family="monospace" fill="rgba(0,229,255,.6)">BRIEF</text>
-            <rect x="190" y="29" width="98" height="4" rx="2" fill="rgba(0,229,255,.55)"/>
-            <rect x="190" y="38" width="74" height="4" rx="2" fill="rgba(139,92,246,.45)"/>
-            <rect x="190" y="47" width="86" height="4" rx="2" fill="rgba(0,229,255,.3)"/>
-          </svg>
-          <div class="proj-desc">轻量简报工具：把长内容与信息流整理成一页速览，去掉噪声，只留要点。</div>
-          <div class="proj-tags"><span class="tag">Brief</span><span class="tag m">Digest</span></div>
-          </a>
-        <div class="proj-foot">
-          <div class="proj-links">
-            <a class="proj-link site" href="https://brief.langhuihui.com/" target="_blank" rel="noopener">官网 →</a>
           </div>
         </div>
       </article>
