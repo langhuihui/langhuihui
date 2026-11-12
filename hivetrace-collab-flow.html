@@ -76,7 +76,7 @@
   @keyframes breathe{0%,100%{opacity:.35}50%{opacity:.9}}
 
   /* 观察锥形扫描：CSS 驱动，可被告警态暂停 */
-  .sweep{transform-box:view-box;transform-origin:800px 182px;
+  .sweep{transform-box:view-box;transform-origin:609px 223px;
          animation:sweepSwing 6s ease-in-out infinite}
   @keyframes sweepSwing{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
   .cone-normal{fill:url(#cone);transition:opacity .35s ease}
@@ -183,16 +183,18 @@
   .c-intake{stroke:#e6a0c4 !important;filter:drop-shadow(0 0 5px rgba(230,160,196,.42))}
   .c-intake .eye{fill:#e6a0c4}
 
-  /* 待办列表：需求整理直接写 / 调度只读 / 开发受指派写 */
+  /* 待办列表：需求整理建单 / 干活方推进状态 / 调度验后关单 */
   .todo-node{fill:#111518;stroke:#3a4046;stroke-width:1.2;transition:stroke .25s,fill .25s}
   .todo-node-h{fill:#9aa0a4;font-size:10.5px;letter-spacing:.1em}
   .todo-node-sep{stroke:#2b3035;stroke-width:1}
   .tl-dot.intake{fill:#e6a0c4}
   .tl-dot.dev{fill:#7aa2f7}
+  .tl-dot.sched{fill:#e7c46e}
   .tl-name{fill:#c9ccd1;font-size:9.5px;letter-spacing:.02em}
   .tl-who{font-size:8.5px;text-anchor:end;letter-spacing:.03em}
   .tl-who.intake{fill:#e6a0c4;fill-opacity:.85}
   .tl-who.dev{fill:#7aa2f7;fill-opacity:.8}
+  .tl-who.sched{fill:#e7c46e;fill-opacity:.85}
   .slink{fill:none;stroke:#4a5057;stroke-width:1;stroke-dasharray:2 4}
   .todoline{fill:none;stroke:#8f959b;stroke-width:1.2;stroke-dasharray:3 5;
             animation:dash 3s linear infinite}
@@ -215,7 +217,7 @@
 <div class="wrap">
   <header>
     <h1>协作架构</h1>
-    <div class="stamp">11-10 · 机器人 = 角色，物件 = 环境</div>
+    <div class="stamp">11-12 · 机器人 = 角色，物件 = 环境</div>
   </header>
 
   <svg viewBox="0 0 1000 790" role="img" aria-label="角色、环境、待办状态与自我优化回路">
@@ -373,7 +375,7 @@
 
     <defs>
       <linearGradient id="cone" gradientUnits="userSpaceOnUse"
-                      x1="861" y1="196" x2="62" y2="560">
+                      x1="609" y1="223" x2="609" y2="740">
         <stop offset="0%"   stop-color="#8ee3ec" stop-opacity=".50"/>
         <stop offset="22%"  stop-color="#8ee3ec" stop-opacity=".38"/>
         <stop offset="45%"  stop-color="#8ee3ec" stop-opacity=".24"/>
@@ -383,7 +385,7 @@
         <stop offset="100%" stop-color="#8ee3ec" stop-opacity="0"/>
       </linearGradient>
       <linearGradient id="coneAlert" gradientUnits="userSpaceOnUse"
-                      x1="861" y1="196" x2="62" y2="560">
+                      x1="609" y1="223" x2="609" y2="740">
         <stop offset="0%"   stop-color="#ff9384" stop-opacity=".62"/>
         <stop offset="22%"  stop-color="#ff9384" stop-opacity=".48"/>
         <stop offset="45%"  stop-color="#e7796e" stop-opacity=".32"/>
@@ -400,41 +402,41 @@
     <!-- 观察的锥形扫描：只剩一束光，随机告警时变红、暂停并收窄 -->
     <g opacity=".85" class="sweep" id="sweep">
       <g class="beam">
-        <polygon class="cone-normal" points="861,196 62,360 62,752" filter="url(#soft)"/>
-        <polygon class="cone-alert" points="861,196 62,440 62,690" filter="url(#soft)"/>
+        <polygon class="cone-normal" points="609,223 300,740 918,740" filter="url(#soft)"/>
+        <polygon class="cone-alert" points="609,223 462,740 756,740" filter="url(#soft)"/>
       </g>
     </g>
 
-    <!-- 主流程连线：房主 → 需求整理 →（直接写）待办列表 -->
-    <path id="p0a" class="flow" d="M313 200 L487 200" marker-end="url(#arw4)"/>
-    <path id="p0b" class="intakeline" d="M500 224 L500 298" marker-end="url(#arwIntake)"/>
-    <text class="stag" x="400" y="190">提需求</text>
-    <text class="stag intake" x="410" y="282" style="text-anchor:end">建单 · 直接写表</text>
+    <!-- 主流程连线：房主 → 需求整理 →（建单）待办列表；全部走曲线 -->
+    <path id="p0a" class="flow" d="M474 122 C 446 134, 422 158, 410 188" marker-end="url(#arw4)"/>
+    <path id="p0b" class="intakeline" d="M392 250 C 390 268, 384 280, 378 296" marker-end="url(#arwIntake)"/>
+    <text class="stag" x="420" y="150" style="text-anchor:end">提需求</text>
+    <text class="stag intake" x="396" y="278">建单 · 落表</text>
 
-    <!-- 调度 → 开发：派单（含指派改表） -->
-    <path id="p1" class="flow" d="M700 287 L700 380" marker-end="url(#arw4)"/>
-    <text class="stag" x="714" y="372">派单 · 指派更新</text>
+    <!-- 调度 → 开发：task delegate 派单，认领 / 交验自动流转前两步状态 -->
+    <path id="p1" class="flow" d="M686 344 C 676 362, 642 366, 616 380" marker-end="url(#arw4)"/>
+    <text class="stag" x="636" y="398">派单 · 认领</text>
 
-    <!-- 调度发起验收（左侧通道） -->
-    <path id="p1c" class="flow" d="M686 268 L620 268 L620 490 L664 490" marker-end="url(#arw4)"/>
-    <text class="stag" transform="translate(610,400) rotate(-90)">发起验收</text>
+    <!-- 调度发起验收（右侧通道，与退回线平行反向，不与开发 / 待办交叉） -->
+    <path id="p1c" class="flow" d="M698 346 C 694 410, 712 468, 736 504" marker-end="url(#arw4)"/>
+    <text class="stag" x="696" y="446" style="text-anchor:end">发起验收</text>
 
-    <!-- 验收之后 -->
-    <path id="p3" class="flow" d="M700 536 L700 558"/>
-    <path id="p4" class="flow" d="M700 598 L700 640"/>
+    <!-- 验收 → 出包 → 发布 → 真机 → 房主：同一个圆（圆心 500,395 · 半径 290）上的弧段 -->
+    <path id="p3" class="flow" d="M731.6 569.5 A 290 290 0 0 1 608.6 663.9" marker-end="url(#arw4)"/>
+    <path id="p4" class="flow" d="M540.4 682.2 A 290 290 0 0 1 386.7 661.9" marker-end="url(#arw4)"/>
 
     <!-- 验收 → 调度：退回重做 -->
-    <path id="b0" class="back" d="M668 486 C 600 470, 600 330, 676 288" marker-end="url(#arw3)"/>
-    <text class="backlbl" x="540" y="484">不通过 → 退回重排</text>
+    <path id="b0" class="back" d="M764 506 C 746 462, 730 402, 718 346" marker-end="url(#arw3)"/>
+    <text class="backlbl" x="752" y="436">不通过 → 退回重排</text>
 
-    <!-- 发布 → 真机 → 房主：体验反馈闭环（沿底部绕回左上） -->
-    <path id="r0" class="ret" d="M684 657 L400 657 L400 598 L318 598" marker-end="url(#arw2)"/>
-    <path id="r1" class="ret" d="M300 578 L300 222" marker-end="url(#arw2)"/>
-    <text class="retlbl" x="500" y="678">发布 → 真机体验 → 反馈</text>
+    <path id="r0" class="ret" d="M325.5 626.6 A 290 290 0 0 1 231.1 503.6" marker-end="url(#arw2)"/>
+    <path id="r1" class="ret" d="M212.8 435.4 A 290 290 0 0 1 459.6 107.8" marker-end="url(#arw2)"/>
+    <text class="retlbl" x="258" y="608" style="text-anchor:end">发布 → 真机体验</text>
+    <text class="retlbl" x="262" y="204" style="text-anchor:end">体验反馈回房主</text>
 
     <!-- 房主 → 观察：在群里商讨流程缺陷（观察者不主动找房主，故单向） -->
-    <path id="d0" class="talk" d="M313 212 L313 240 L846 240 L846 182" marker-end="url(#arwTalk)"/>
-    <text class="talklbl" x="560" y="230" style="text-anchor:middle">商讨流程缺陷</text>
+    <path id="d0" class="talk" d="M528 114 C 568 120, 592 146, 602 182" marker-end="url(#arwTalk)"/>
+    <text class="talklbl" x="580" y="132">商讨流程缺陷</text>
 
     <!-- 流动点 -->
     <circle class="dot" r="2.3"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#p0a"/></animateMotion></circle>
@@ -448,9 +450,9 @@
     <circle class="dot w" r="2.1"><animateMotion dur="2.4s" repeatCount="indefinite" begin=".8s"><mpath href="#r1"/></animateMotion></circle>
     <circle class="dot talk" r="2.1"><animateMotion dur="4.6s" repeatCount="indefinite" begin=".6s"><mpath href="#d0"/></animateMotion></circle>
 
-    <!-- 房主 + 真机（中列枢纽：真机在房主下方，反馈直上） -->
+    <!-- 真机（左侧回流起点：体验反馈沿左弧回到房主） -->
     <g class="hit" data-k="device">
-      <g transform="translate(285,578)">
+      <g transform="translate(204,450)">
         <!-- 机身 -->
         <rect x="2.6" y="0.6" width="28" height="40" rx="5.6" fill="#0f1316" stroke="#8f959b" stroke-width="1.4"/>
         <path d="M12.4 3.6h7.2" stroke="#8f959b" stroke-width="1.2" stroke-linecap="round"/>
@@ -475,23 +477,23 @@
         </rect>
         <circle cx="16.6" cy="37" r="1.8" fill="none" stroke="#8f959b" stroke-width="1.2"/>
       </g>
-      <text class="envt" x="300" y="642">真机</text>
+      <text class="envt" x="196" y="480" style="text-anchor:end">真机</text>
     </g>
 
     <g class="hit" data-k="owner">
-      <circle class="hub" cx="300" cy="200" r="34"/>
-      <circle cx="300" cy="200" r="23" fill="#191d21" stroke="#5c6168" stroke-width="1.2"/>
-      <g transform="translate(284,182)">
+      <circle class="hub" cx="500" cy="105" r="34"/>
+      <circle cx="500" cy="105" r="23" fill="#191d21" stroke="#5c6168" stroke-width="1.2"/>
+      <g transform="translate(484,87)">
         <g class="sym">
           <circle cx="16" cy="11" r="5.2"/><path d="M5 36c.6-8.4 5-13.4 11-13.4S26.4 27.6 27 36"/>
         </g>
       </g>
-      <text class="lbl" x="300" y="246">房主</text>
+      <text class="lbl" x="500" y="151">房主</text>
     </g>
 
-    <!-- 需求整理：接收房主需求，直接操作待办列表（建单 / 维护） -->
+    <!-- 需求整理：接房主原始需求，只建单 / 改 todo 态内容 -->
     <g class="hit" data-k="intake">
-      <g transform="translate(484,182)">
+      <g transform="translate(376,192)">
         <g class="rbot c-intake">
           <path d="M16 8V3.4"/><circle cx="16" cy="2.3" r="1.4"/>
           <rect x="5.5" y="8" width="21" height="15" rx="3.4"/>
@@ -506,14 +508,14 @@
           </g>
         </g>
       </g>
-      <text class="lbl" x="500" y="156">需求整理</text>
-      <text class="sub" x="500" y="170">直接建单 · 维护</text>
+      <text class="lbl" x="370" y="208" style="text-anchor:end">需求整理</text>
+      <text class="sub" x="370" y="222" style="text-anchor:end">只建单 · 改 todo</text>
     </g>
 
 
     <!-- 调度：操纵杆（右侧链顶，紧邻观察与规则） -->
     <g class="hit" data-k="me">
-      <g transform="translate(682,245)">
+      <g transform="translate(676,300)">
         <g class="rbot me c-sched">
           <path d="M16 9V3.4"/><circle cx="16" cy="2.3" r="1.4"/>
           <rect x="5.5" y="9" width="21" height="15" rx="3.4"/>
@@ -535,13 +537,13 @@
           </circle>
         </g>
       </g>
-      <text class="lbl" x="700" y="310">调 度</text>
+      <text class="lbl" x="744" y="312" style="text-anchor:middle">调 度</text>
     </g>
 
     <!-- 观察 -->
-    <path class="obsline" d="M724 250 L844 200"/>
+    <path id="obsline" class="obsline" d="M616 232 Q 640 290 680 306"/>
     <g class="hit" data-k="flow">
-      <g transform="translate(844,163)">
+      <g transform="translate(592,190)">
         <g class="rbot dim c-obs">
           <circle cx="16" cy="14" r="9.4"/>
           <circle cx="16" cy="14" r="3.6"/>
@@ -550,25 +552,25 @@
           <path d="M8 34h16"/>
         </g>
       </g>
-      <text class="sub" x="861" y="160">观察 · 归因</text>
+      <text class="sub" x="634" y="210" style="text-anchor:start">观察 · 归因</text>
     </g>
 
     <!-- 规则 · 脚本 -->
     <g class="hit" data-k="rule">
-      <rect class="node-opt" x="794" y="288" width="132" height="64" rx="14"/>
-      <g transform="translate(822,320)"><use class="sym opt" href="#i-gear" x="-9" y="-9" width="18" height="18"/></g>
-      <text class="lbl" x="882" y="312" style="font-size:11.5px">规则 · 脚本</text>
-      <text class="sub" x="882" y="330">复盘 → 固化</text>
+      <rect class="node-opt" x="772" y="300" width="132" height="64" rx="14"/>
+      <g transform="translate(800,332)"><use class="sym opt" href="#i-gear" x="-9" y="-9" width="18" height="18"/></g>
+      <text class="lbl" x="860" y="324" style="font-size:11.5px">规则 · 脚本</text>
+      <text class="sub" x="860" y="342">复盘 → 固化</text>
     </g>
-    <path id="o1" class="loop" d="M861 200 L861 286" marker-end="url(#arw)"/>
-    <path id="o2" class="loop" d="M793 300 C 772 296, 752 290, 730 282" marker-end="url(#arw)"/>
+    <path id="o1" class="loop" d="M630 224 C 700 230, 800 250, 830 296" marker-end="url(#arw)"/>
+    <path id="o2" class="loop" d="M770 334 C 756 334, 742 333, 726 330" marker-end="url(#arw)"/>
     <circle class="dot y" r="2.1"><animateMotion dur="2.0s" repeatCount="indefinite"><mpath href="#o1"/></animateMotion></circle>
     <circle class="dot y" r="2.1"><animateMotion dur="5.0s" repeatCount="indefinite"><mpath href="#o2"/></animateMotion></circle>
 
     <!-- 项目开发（多机器人 = 并行开发） -->
     <g class="hit" data-k="dev">
       <!-- A -->
-      <g transform="translate(634,384)">
+      <g transform="translate(506,384)">
         <g class="rbot c-dev">
           <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
           <rect x="4.5" y="7" width="23" height="15" rx="3"/>
@@ -578,7 +580,7 @@
         </g>
       </g>
       <!-- B（装配动效） -->
-      <g transform="translate(678,388)">
+      <g transform="translate(550,388)">
         <g class="rbot c-dev">
           <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
           <rect x="4.5" y="7" width="23" height="15" rx="3"/>
@@ -597,7 +599,7 @@
         </g>
       </g>
       <!-- C -->
-      <g transform="translate(722,384)">
+      <g transform="translate(594,384)">
         <g class="rbot c-dev">
           <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
           <rect x="4.5" y="7" width="23" height="15" rx="3"/>
@@ -606,21 +608,21 @@
           <path d="M13 25l-2.6 3.2L13 31.4"/><path d="M19 25l2.6 3.2L19 31.4"/>
         </g>
       </g>
-      <text class="lbl" x="700" y="444">项 目 开 发 · 并 行</text>
+      <text class="lbl" x="566" y="442">开 发 · 并 行</text>
     </g>
     <g class="hit" data-k="env-dev">
-      <path class="envline" d="M752 400 L766 400"/>
-      <g transform="translate(770,384)"><use class="esym" href="#i-phone" x="0" y="0" width="26" height="33"/></g>
-      <g transform="translate(810,384)"><use class="esym" href="#i-dual" x="0" y="0" width="26" height="33"/></g>
-      <g transform="translate(850,384)"><use class="esym" href="#i-branch" x="0" y="0" width="26" height="33"/></g>
-      <g transform="translate(890,384)"><use class="esym" href="#i-folder" x="0" y="0" width="26" height="33"/></g>
-      <text class="envt" x="843" y="442">双端设备 · 分支 · 工作区</text>
+      <path class="envline" d="M566 448 Q 562 452 566 456"/>
+      <g transform="translate(486,458)"><use class="esym" href="#i-phone" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(526,458)"><use class="esym" href="#i-dual" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(566,458)"><use class="esym" href="#i-branch" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(606,458)"><use class="esym" href="#i-folder" x="0" y="0" width="26" height="33"/></g>
+      <text class="envt" x="559" y="508">双端设备 · 分支 · 工作区</text>
     </g>
 
     <!-- 验收 -->
     <g class="hit" data-k="verify">
-      <circle class="ring" cx="700" cy="500" r="34" fill="none" stroke="#6ee7a8" stroke-opacity=".14"/>
-      <g transform="translate(683,480)">
+      <circle class="ring" cx="751" cy="540" r="34" fill="none" stroke="#6ee7a8" stroke-opacity=".14"/>
+      <g transform="translate(735,520)">
         <g class="rbot ok c-verify">
           <path d="M16 4l10 4.4v8.2c0 6.4-4.4 10.8-10 12.8-5.6-2-10-6.4-10-12.8V8.4z"/>
           <circle class="eye" cx="12.6" cy="14" r="1.4"/><circle class="eye" cx="19.4" cy="14" r="1.4"/>
@@ -638,12 +640,12 @@
           </circle>
         </g>
       </g>
-      <text class="lbl" x="700" y="548">验 收 · 门 禁</text>
+      <text class="lbl" x="784" y="594" style="text-anchor:start">验 收 · 门 禁</text>
     </g>
 
     <!-- 出包 -->
     <g class="hit" data-k="build">
-      <g transform="translate(684,562)">
+      <g transform="translate(559,657)">
         <g class="rbot c-build">
           <rect x="8" y="2.6" width="16" height="11" rx="3"/>
           <circle class="eye" cx="12.4" cy="8" r="1.3"/><circle class="eye" cx="19.6" cy="8" r="1.3"/>
@@ -653,12 +655,12 @@
           <path class="tape" d="M4 16h24" stroke="#c4a3f7" stroke-width="2.2" fill="none" opacity=".9"/>
         </g>
       </g>
-      <text class="sub" x="700" y="612">出包</text>
+      <text class="sub" x="575" y="712">出包</text>
     </g>
 
     <!-- 发布 -->
     <g class="hit" data-k="publish">
-      <g transform="translate(684,642)">
+      <g transform="translate(339,628)">
         <g class="rbot c-pub">
           <rect x="7" y="9" width="18" height="12" rx="3"/>
           <circle class="eye" cx="12" cy="15" r="1.3"/><circle class="eye" cx="20" cy="15" r="1.3"/>
@@ -676,22 +678,22 @@
           </circle>
         </g>
       </g>
-      <text class="sub" x="700" y="692">发布</text>
+      <text class="sub" x="355" y="688">发布</text>
     </g>
 
-    <!-- 待办列表：需求整理直接写 / 调度只读 / 开发受指派写 -->
-    <path id="p-todo" class="todoline" d="M686 262 L640 262 L640 330 L581 330" marker-end="url(#arw2)"/>
-    <text class="stag" x="612" y="254">只读 · 巡检</text>
+    <!-- 待办列表：需求整理建单 / 干活方推进 / 调度验后关单 -->
+    <path id="p-todo" class="todoline" d="M674 318 C 600 304, 500 304, 446 318" marker-end="url(#arw2)"/>
+    <text class="stag" x="560" y="298" style="text-anchor:middle">读表 · 裁决</text>
     <circle class="dot w" r="2.2"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#p-todo"/></animateMotion></circle>
 
-    <!-- 开发 agent 受调度指派更新状态 -->
-    <path id="p-devwrite" class="devline" d="M636 400 L600 400 L600 420 L581 420" marker-end="url(#arwDev)"/>
-    <text class="stag dev" x="540" y="442" style="text-anchor:middle">受指派更新</text>
+    <!-- 干活方认领 / 交验时推进前两步状态 -->
+    <path id="p-devwrite" class="devline" d="M508 404 C 488 404, 470 400, 446 400" marker-end="url(#arwDev)"/>
+    <text class="stag dev" x="474" y="390" style="text-anchor:middle">认领 / 交验</text>
     <circle class="dot devw" r="2.2"><animateMotion dur="2.2s" repeatCount="indefinite" begin=".4s"><mpath href="#p-devwrite"/></animateMotion></circle>
 
     <g class="hit" data-k="todo">
-      <g transform="translate(421,300)">
-        <rect class="todo-node" width="158" height="124" rx="12"/>
+      <g transform="translate(282,300)">
+        <rect class="todo-node" width="158" height="134" rx="12"/>
         <!-- 列表符号 -->
         <g stroke="#7d8288" stroke-width="1.1" fill="none" stroke-linecap="round">
           <rect x="13" y="10" width="12" height="12" rx="2"/>
@@ -700,28 +702,28 @@
         <text class="todo-node-h" x="33" y="20">待办列表</text>
         <path class="todo-node-sep" d="M12 29 H146"/>
 
-        <circle class="tl-dot intake" cx="20" cy="45" r="2.8"/>
-        <text class="tl-name" x="30" y="48">todo</text>
-        <text class="tl-who intake" x="146" y="48">需求整理 · 建单</text>
+        <circle class="tl-dot intake" cx="20" cy="46" r="2.8"/>
+        <text class="tl-name" x="30" y="49">todo</text>
+        <text class="tl-who intake" x="146" y="49">需求整理 · 建单</text>
 
-        <circle class="tl-dot dev" cx="20" cy="69" r="2.8"/>
-        <text class="tl-name" x="30" y="72">in_progress</text>
-        <text class="tl-who dev" x="146" y="72">开发 · 领活</text>
+        <circle class="tl-dot dev" cx="20" cy="70" r="2.8"/>
+        <text class="tl-name" x="30" y="73">in_progress</text>
+        <text class="tl-who dev" x="146" y="73">干活方 · 认领</text>
 
-        <circle class="tl-dot dev" cx="20" cy="93" r="2.8"/>
-        <text class="tl-name" x="30" y="96">review</text>
-        <text class="tl-who dev" x="146" y="96">开发 · 交验</text>
+        <circle class="tl-dot dev" cx="20" cy="94" r="2.8"/>
+        <text class="tl-name" x="30" y="97">review</text>
+        <text class="tl-who dev" x="146" y="97">干活方 · 交验</text>
 
-        <circle class="tl-dot dev" cx="20" cy="115" r="2.8"/>
-        <text class="tl-name" x="30" y="118">done</text>
-        <text class="tl-who dev" x="146" y="118">开发 · 验后关单</text>
+        <circle class="tl-dot sched" cx="20" cy="118" r="2.8"/>
+        <text class="tl-name" x="30" y="121">done</text>
+        <text class="tl-who sched" x="146" y="121">调度 · 验后关单</text>
       </g>
     </g>
 
     <!-- 流程里的验收关口（与待办列表的最后一格呼应） -->
-    <path class="slink" d="M734 500 L744 500"/>
-    <path class="tgate" d="M754 490 L764 500 L754 510 L744 500 Z"/>
-    <text class="tgate-t" x="754" y="528">验收通过</text>
+    <path id="slink" class="slink" d="M786 540 Q 791 536 796 540"/>
+    <path class="tgate" d="M808 530 L818 540 L808 550 L798 540 Z"/>
+    <text class="tgate-t" x="808" y="520">验收通过</text>
 
   </svg>
 
@@ -732,7 +734,7 @@
     <span><i class="obs"></i>只读观察</span>
     <span><i class="opt"></i>自我优化回路</span>
     <span><i class="ret"></i>真机体验反馈</span>
-    <span><b style="color:#e6a0c4">●</b> 需求整理 / <b style="color:#7aa2f7">●</b> 开发 · 写入（调度只读）</span>
+    <span><b style="color:#e6a0c4">●</b> 建单 / <b style="color:#7aa2f7">●</b> 认领·交验 / <b style="color:#e7c46e">●</b> 验后关单</span>
   </div>
 
   <div class="tray">
@@ -743,12 +745,12 @@
   <div class="hint">点击任一角色、物体或待办列表，查看职责与执行流程</div>
 
   <div class="maint">
-    <span class="chip"><b>零崩溃门槛</b>连开 3 次</span>
+    <span class="chip"><b>SMOKE-CHAT-3X</b>连开 3 次 FATAL=0</span>
     <span class="chip"><b>发布包冒烟</b>装要发的包</span>
     <span class="chip red"><b>提交前拦截</b>UI 文案</span>
     <span class="chip warn"><b>巡检脚本</b>三线对照</span>
-    <span class="chip warn"><b>健康度</b>分支 / 缓存 / 工作区</span>
-    <span class="chip"><b>待办列表</b>调度只读</span>
+    <span class="chip warn"><b>健康度</b>wt 目录 / 分支 / 缓存</span>
+    <span class="chip"><b>待办列表</b>验后关单</span>
   </div>
 </div>
 
@@ -783,160 +785,149 @@ const TRAY = [
 ];
 
 const DATA = {
-  chat:{name:"HTalk 群 · 共享上下文",tag:"所有角色读写的同一份现场",
-    duty:["需求、判断、证据、争议全部在群里，不在私聊里","一条消息就是一个可引用的锚点（seq / ref）","新人（或新 agent）进来读历史即可接上下文，不用重新问一遍"],
-    flow:["房主发一句话 + 一张截图 → 这就是需求原文","需求整理直接建单写进待办 → 调度只读这张表来派单","交付贴证据（dump / sha / 像素）→ 任何人可复核","不通过就在原线程里退，理由留在同一处"],
-    out:["可追溯的决策链","可复用的上下文"],
-    note:"今天几次「以为改了其实没合」，都是因为群里说的是「我以为」而不是「sha 是多少」——群能把话说清，前提是每条都带证据。"},
+  chat:{name:"HTalk 群 · 共享上下文",tag:"一份现场，全群共用",
+    duty:["需求、判断、证据、争议都在群里，不私聊","一条消息 = 一个可引用锚点（seq / ref）","新人或新 agent 读历史即可接上下文"],
+    flow:["房主一句话 + 一张截图 → 需求原文","需求整理查重后建单 → 调度读表派单","交付自证贴证据（截图 / dump / JSON / 行号）","不通过在原线程里退，理由留在同一处"],
+    out:["可追溯的决策链"],
+    note:"群里说的是「我以为」还是「sha 是多少」，决定了这条能不能复核。"},
 
-  notice:{name:"群公告（约定）",tag:"全群共同遵守的规则页",
-    duty:["分工、协作方式、发版门槛、红线都写在公告里","每次改动带 rev 号，谁都能看到版本"],
-    flow:["出现反复踩的坑 → 写成规则","带 --if-rev 更新，避免覆盖别人的修改","变更自动通知全群"],
-    out:["可执行的约定（不是口号）"],
-    note:"公告里的每条几乎都对应一次事故：红线来自差点打扰真实用户，发布四步来自一次链路断掉。"},
-  owner:{name:"房主",tag:"需求来源 · 最终裁决",
-    duty:["提需求、定优先级","对「对外发布 / 账号证书 / 真机 / 预算」拍板","验收成果，提出体验问题"],
-    flow:["提一个需求（常常一句话 + 一张截图）","看到判断依据与证据，而不是话术","决定发不发、要不要改方向"],
+  notice:{name:"群公告（约定）",tag:"分工 · 协作方式 · 门槛 · 红线",
+    duty:["当前 rev=35，分工与发版门槛以此为准","用 --if-rev 更新，避免覆盖别人的改动","变更自动通知全群"],
+    flow:["反复踩的坑 → 写成规则","带 --if-rev 更新公告","规则同时落进脚本与 skill"],
+    out:["可执行的约定"],
+    note:"公告每条几乎都对应一次事故：红线来自差点打扰真实用户，发布链路来自一次断链。"},
+
+  owner:{name:"房主",tag:"需求来源 · 人工裁决",
+    duty:["提需求、定优先级","只有账号 / 证书 / 真机 / 预算 / 对外发布才唤醒房主","在真机上看效果，提体验问题"],
+    flow:["一句话 + 一张截图提需求","只看判断依据与证据","决定是否发布、是否改方向；主动找观察者商讨流程缺陷"],
     out:["需求与口径","发布许可"],
-    note:"需求方给的「现象」不等于「根因」，调度负责翻译成可验证的判据。"},
-  me:{name:"调度 · 机器人",tag:"只读待办 · 决策 · 裁决 · 指派",
-    duty:["对待办列表只有读权限：不建单、不改状态、不关单","读表定优先级（1 跑 + 1 排队），派给唯一 owner","指派项目开发去更新待办状态，自己不动笔","裁决红项归属：产品 bug / 断言打偏 / 环境 / 版本没合","不可逆操作把关：删分支、删 worktree、force push","对房主汇报；公告与 skill 终审"],
-    flow:["读待办列表 → 挑一件、定优先级","翻译成「可量、且改坏它会转红」的判据","派给唯一 owner，并指派它更新待办状态","收交付 → 交叉验证证据是否自洽","决定合并或退回；把坑写进规则/脚本"],
-    out:["派单 + 判据","指派指令","裁决结论","公告 / skill / 脚本 diff"],
-    note:"待办列表对它只有读权限：建单归需求整理，改状态归项目开发。它读表、判优先级、派单、裁决；表的每一次变更都由被指派的人落笔。"},
-  flow:{name:"观察 · 机器人",tag:"只读 · 出事实，不做决定",
-    duty:["巡检摘要：谁在跑、谁卡、卡在哪一环","阻塞归因：红项算谁的，给文件:行 / 日志证据","队列卫生：同源任务重复、done 但没交付","判据审计：新任务是否可量"],
-    flow:["跑 patrol.sh 拿一屏事实","比对分支与主线：谁落后、谁推了没合","异常归类，附证据，不附命令","出清单报给调度"],
-    out:["巡检摘要","归因表","时间利用报表"],
-    note:"硬边界：不派活、不合并、不碰生产分支、不直接找房主。"},
+    note:"房主给的「现象」不等于「根因」，调度负责翻译成可验证的判据。"},
+
+  me:{name:"调度 · 机器人",tag:"读表派单 · 裁决 · 验后关单",
+    duty:["读待办列表定优先级：1 跑 + 1 排队，派给唯一 owner","派单走 task delegate，认领 / 交验的状态自动流转","done 是自己的活：验收通过后由调度关单","裁决红项归属：产品 bug / 断言打偏 / 环境 / 版本没合","不可逆操作把关：删分支、删 worktree、force push","对房主汇报；公告与 skill 终审"],
+    flow:["读表 → 挑一件、定优先级","翻译成「可量、且改坏它会转红」的判据","task delegate 派给唯一 owner","交叉验证证据 → 决定合并或退回","验收通过 → 关单（done）；把坑写进规则 / 脚本"],
+    out:["派单 + 判据","裁决结论","公告 / skill / 脚本 diff"],
+    note:"建单归需求整理，前两步状态归干活方，关单归调度——改状态的人和判完成的人不是同一个。"},
+
+  flow:{name:"观察 · 机器人",tag:"只读 · 只向调度汇报",
+    duty:["巡检：谁在跑、谁卡、卡在哪一环；in_progress 超 30 分钟查卡点","红项归因：给文件:行 / 日志证据","队列卫生：重复单、review 未排验、done 却没交付","每次巡检核 wt 目录与分支是否需要清理（只读评估）","判据审计：新任务是否可量"],
+    flow:["跑 patrol.sh 拿一屏事实","比对分支与主线：谁落后、谁推了没合","异常归类，附证据、不附命令","两段式回报：正文不带 @，再跟独立短消息写结论 + seq"],
+    out:["巡检摘要","归因表","清理评估（只给结论，不动手）"],
+    note:"不派活、不合并、不碰生产分支；删目录 / 删分支不可逆，只评估，动手须授权；房主主动问才回。"},
+
   rule:{name:"规则 · 脚本 · Skill",tag:"复盘 → 固化 → 反哺派单",
-    duty:["把踩过的坑写成可执行判据","把重复动作固化成脚本","把知识写进 skill"],
-    flow:["观察者给出归因","判断是「人的疏忽」还是「流程缺检查」","沉淀成脚本 / 门槛 / 判据","下一轮派单直接引用"],
-    out:["patrol.sh","device-auth","pre_push_gate","判据三底线"],
-    note:"代码会变，规则和脚本留下来。"},
+    duty:["把踩过的坑写成可执行判据","把重复动作固化成脚本","把知识写进公告 rev 与 skill"],
+    flow:["观察者给出归因","判断是疏忽还是流程缺检查","沉淀成脚本 / 门槛 / 判据","下一轮派单直接引用"],
+    out:["pre_push_gate","patrol.sh","验收判据"],
+    note:"代码会变，规则和脚本留下来；同一处第 2 次修就停下来看结构。"},
+
   dev:{name:"项目开发 · 机器人",tag:"双端并行 · 一文件一 owner",
-    duty:["Android 与 iOS 各有人，同一时刻可以并行推进","受调度指派更新待办：领活→in_progress，交付→review，验后→done","不擅自改状态，每一次变更都来自一次明确指派","一 agent 一 worktree，只改自己负责的文件","能编译就提交，预算耗尽也要留可编译状态"],
-    flow:["读基线 → 定位（大文件按段读，避免 OOM）","改一小步 → 编译 → 再改","设备实测取证：dump / 截图 / bounds / pbpaste","push 分支 → 报 commit sha + 判据结果"],
-    out:["双端 feature 分支","证据：像素值 / bounds / 原始 JSON"],
-    note:"禁止「默认空实现」兜底；跨文件调用链必须设备实测。iOS 版本号常是 1.0，必须报二进制 sha。"},
+    duty:["Android / iOS 各一 worktree，只改自己负责的文件","认领 → in_progress，附证据完成 → review（前两步状态归干活方）","装包自证：截图 / dump / JSON / 行号","能编译就提交，预算耗尽也留可编译态"],
+    flow:["读基线 → 大文件按段读（3000 行以上禁整文件反复读）","改一小步 → 编译 → 再改","设备实测取证 → push 分支 → 报 sha + 判据结果"],
+    out:["双端 feature 分支","像素值 / bounds / 原始 JSON"],
+    note:"禁「默认空实现」兜底；跨文件调用链须实测贴 dump；自验截图带设备 id、基线 sha、二进制 sha 前 8 位。"},
 
   "env-dev":{name:"设备 · 分支 · 工作区",tag:"开发的操作对象",
-    duty:["Android 模拟器 / iOS 两台模拟器：取证与复现","分支：承载一次需求的改动范围","工作区：一 agent 一 worktree，互不干扰"],
+    duty:["Android / iOS 模拟器：取证与复现","分支：承载一次需求的改动范围","一 agent 一 worktree，互不干扰"],
     flow:["装包 → 授权（装包会消耗授权）","取证 → 提证据","分支 → 推远端 → 交验收"],
     out:["设备证据","可合并分支"],
     note:"iOS 同时最多 boot 2 台、只能一台 xcodebuild；Android 用 wm density 复现真机差异。"},
 
-  "dev-android":{name:"开发 · 机器人（Android）",tag:"两件并行 · 一文件一 owner",
-    duty:["只改 Android 目录下自己负责的文件","独立 worktree，不碰别人的未提交改动","能编译就提交"],
-    flow:["读基线 → 定位（大文件按段读）","改一小步 → 编译 → 再改","设备实测：dump / 截图 / bounds","push 分支 → 报 sha + 判据结果"],
-    out:["feature 分支","像素值 / bounds / 原始 JSON"],
-    note:"禁止「默认空实现」兜底；跨文件调用链必须设备实测。"},
-  "dev-ios":{name:"开发 · 机器人（iOS）",tag:"两台模拟器轮流用",
-    duty:["只改 iOS 目录","同一时刻只允许一台 xcodebuild","装包后自验"],
-    flow:["改 SwiftUI 视图","构建 → 装模拟器 → 授权","取证：simctl pbpaste / 日志 / 像素","push → 报 commit + 二进制 sha"],
-    out:["feature 分支","装包信息（sha / 时间 / 会话名）"],
-    note:"版本号常常都是 1.0，分不出新旧——必须报二进制 sha。"},
   verify:{name:"验收 · 机器人",tag:"唯一的放行口",
-    duty:["合并分支、解冲突（默认取功能超集）","编译 + 跑门禁 + 装包 + 截图","出包，并在发布包上复验"],
-    flow:["收分支 → 查 merge-base 是否真 IN","合并 → 两端编译","跑零崩溃门槛 / phase1 / 发布包冒烟","红项分类后回报","全绿出包，附三线状态表"],
-    out:["gate / preview 包","红项清单（带证据）","三线状态表"],
-    note:"没测到 ≠ 通过；门槛拦下来时不许 --no-verify 绕过。"},
+    duty:["合并分支 + 编译；开发阶段不跑断言、不出包","收口时出预览包，跑 acceptance 门禁与 UI 断言","不改业务代码、不改断言","只做 Android 门禁与出包，不碰 iOS 设备"],
+    flow:["收分支 → 查 merge-base 是否真 IN","合并 → 两端编译","跑 SMOKE-CHAT-3X / phase1 / 发布包冒烟","红项分类回报；全绿出包，附三线状态表"],
+    out:["gate / preview 包","红项清单（带证据）"],
+    note:"没测到 ≠ 通过；环境异常判 BLOCKED，不许回落 PASS，也不许 --no-verify 绕过。"},
+
   build:{name:"出包（产物）",tag:"版本号 · sha · size",
-    duty:["产出版本号、sha256、size","包作为群附件发出，不贴本地路径","区分门禁包与发布包"],
-    flow:["构建 → 记录三件套","上传群附件","发布方自己取最新签名 URL"],
-    out:["APK / 包","三条元数据"],
-    note:"跨机器传路径必断。"},
-  publish:{name:"发布（站点）",tag:"上传 + 回读清单",
-    duty:["下载 → 校验 sha / size → 上传","回读线上清单核对四条字段","对不上就停手"],
-    flow:["取最新签名 URL","校验 sha256 与 size","上传 → 回读清单","核对四条字段"],
-    out:["线上清单（已核对）"],
-    note:"签名 URL 约 20 分钟过期。"},
-  "env-android":{name:"模拟器 · 分支 · 工作区",tag:"Android 的操作对象",
-    duty:["模拟器：dump / 截图 / 改 density 复现真机差异","分支：承载一次需求的改动范围","工作区：一 agent 一 worktree"],
-    flow:["装包 → 授权（装包会消耗授权）","取证 → 提证据","分支 → 推远端 → 交验收"],
-    out:["设备证据","可合并分支"],
-    note:"真机与模拟器最大差别是 density / 字体缩放 / 分辨率。"},
-  "env-ios":{name:"两台模拟器 · 分支 · 工作区",tag:"iOS 的操作对象",
-    duty:["最多 boot 2 台，只能一台在 xcodebuild","一 agent 一设备","分支与工作区同 Android"],
-    flow:["构建 → 装指定设备 → 启动","授权（缺 Keychain entitlement 会 -34018）","取证 → 提证据"],
-    out:["设备证据","可合并分支"],
-    note:"两个 agent 同时 xcodebuild 会打死 SpringBoard。"},
-  "env-build":{name:"门禁脚本 · 构建缓存",tag:"出包的支撑",
-    duty:["零崩溃门槛 / 发布包冒烟 / UI 文案拦截","构建缓存是最大的一块垃圾（单目录可达 13G）"],
-    flow:["push 前跑文案检查","合并后跑 phase1","出包后跑发布包冒烟"],
-    out:["PASS / FAIL / BLOCKED"],
-    note:"环境异常判 BLOCKED，不回落 PASS。"},
-  "env-publish":{name:"线上清单 · 群附件",tag:"用户实际拿到什么",
-    duty:["群附件是跨机器传包的唯一通路","清单是「线上到底是什么」的唯一凭据"],
-    flow:["上传产物","回读清单四条字段","对不上停手"],
-    out:["可下载链接 + 已核对清单"],
-    note:"附件链接 20 分钟过期。"},
+    duty:["产出版本号、sha256、size","包走群附件，不贴本地路径","区分门禁包与发布包"],
+    flow:["构建 → 记录三件套","上传群附件","发布方自取最新签名 URL"],
+    out:["APK / 包 + 三条元数据"],
+    note:"跨机器传路径必断；仅收口时出预览包，不含调试信息。"},
+
+  publish:{name:"站点发布（hdemo）",tag:"上传 + 回读清单",
+    duty:["下载 → 校验 sha / size → 上传","HTTP 回读线上清单核四条字段","对不上就停手"],
+    flow:["出包 → 附件 → 自取签名 URL","校验 sha256 与 size","上传 → 回读清单 → 逐条核对"],
+    out:["已核对的线上清单"],
+    note:"签名 URL 约 20 分钟过期；传上去不等于发布成功。"},
+
   worktree:{name:"工作区（文件夹）",tag:"一 agent 一目录",
     duty:["每个 agent 一个独立 worktree","未提交改动是最大风险点"],
     flow:["开工前确认 HEAD 与分支","dirty 就提交，别裸着","收工保留可编译状态"],
     out:["可复现的工作区"],
-    note:"别人 worktree 里的未提交改动不要动，也不要替人提交。"},
+    note:"别人 worktree 里的未提交改动不要动；清理前先做只读评估，删须授权。"},
+
   branches:{name:"三线分支（分支板）",tag:"android / ios / verify",
-    duty:["android 线只合 Android 支，ios 线只合 iOS 支","verify 转只读基线"],
-    flow:["看 behind / ahead","MISSING 要判断「真丢了」还是「已被等价覆盖」"],
+    duty:["android 线只合 Android 支，ios 线只合 iOS 支","verify 转只读基线","活远端分支才是真相源，本地陈旧 ref 要分开数"],
+    flow:["看 behind / ahead","MISSING 判断「真丢了」还是「已被等价覆盖」"],
     out:["各线 head + 落后关系"],
-    note:"今天两次「以为改了其实没合」都出在这里。"},
+    note:"两次「以为改了其实没合」都出在这里；删分支不可逆，须授权。"},
+
   cache:{name:"构建缓存（磁盘）",tag:"DerivedData / build",
     duty:["用于增量构建，也会无限膨胀","每次 xcodebuild 再叠一层"],
     flow:["清理前确认没有构建在跑","只删 2 小时以上未动的","保留最近一次用于复现"],
     out:["回收的磁盘空间"],
     note:"实测单个 /tmp/hv-ios-build 到过 13G。"},
+
   attach:{name:"群附件（信封）",tag:"跨机器传包",
-    duty:["出包方把包发群附件","发布方自己取最新签名 URL"],
+    duty:["出包方把包发群附件","发布方自取最新签名 URL"],
     flow:["上传附件","对方拉最新链接","下载后校验 sha / size"],
     out:["可下载的包"],
     note:"链接 20 分钟过期；转发别人贴的链接会 403。"},
+
   site:{name:"预览站（浏览器）",tag:"可访问的线上页面",
     duty:["承载预览包的下载与说明","对用户可见，代表产品状态"],
     flow:["上传产物","更新清单","回读校验"],
     out:["可访问链接"],
-    note:"预览版要标注已知问题。"},
+    note:"预览版标题写 [预览版] 并列已知问题。"},
+
   manifest:{name:"线上清单（文档）",tag:"四条字段",
     duty:["versionCode / versionName / sha256 / size"],
     flow:["上传后 HTTP 回读","逐条核对","不一致停手"],
     out:["已核对清单"],
-    note:"传上去不等于发布成功。"},
+    note:"回读值才是线上版本号，不是出包号。"},
+
   queue:{name:"任务队列（卡片堆）",tag:"1 跑 + 1 排队",
-    duty:["同一时刻最多两件","同源需求合并成一条"],
-    flow:["派单前查队列深度","已消费的记录 delete","done 但没交付的要揪出来"],
+    duty:["同一时刻最多两件","多需求合成一条","已交付记录及时 delete（只删记录不停活）"],
+    flow:["派单前查队列深度","review → 排验收","in_progress 超 30 分钟查卡点"],
     out:["干净的队列"],
-    note:"今天一个 agent 堆到 5 条，所有任务一起变慢。"},
-  todo:{name:"待办列表",tag:"需求整理建单 · 调度只读 · 开发受指派更新",
-    duty:["一张表列出四个状态：todo / in_progress / review / done","需求整理直接操作：建单（todo）+ 维护条目","调度只有读权限：巡检谁卡住、谁 done 了却没交付、谁自报完成","项目开发受调度指派才更新状态，不擅自改表"],
-    flow:["房主提需求 → 需求整理直接建单 → todo","调度只读这张表 → 派单并指派项目开发去更新","领活（受指派）→ in_progress","贴证据交付（受指派）→ review","验收门禁通过、调度指派 → 开发关单 → done"],
-    out:["一眼可见的待办状态表","谁改的、何时改的记录","不会「自报完成」的交付链"],
-    note:"读写权是分开的：需求整理写建单那一格，项目开发写状态推进，调度只读不写。这样「完成」既不是开发自报，也不是读表的人顺手关的，而是验收通过后再由调度指派开发落笔。"},
-  intake:{name:"需求整理 · 机器人",tag:"直接操作待办列表 · 建单 / 维护",
-    duty:["专门接住房主一句话 + 截图式的原始需求","补齐上下文，拆成结构化待办：范围、判据、不许碰的文件","直接写进待办列表建单（todo），并维护条目","替调度卸掉「原始需求 → 可执行任务」这段脏活","不派单、不动代码；有歧义回群问一句，不自己拍板"],
-    flow:["房主在群里提需求（常常就一句话 + 一张截图）","整理 agent 补齐上下文、拆成一条条待办","直接写进待办列表，状态置为 todo","调度只读这张表来派单；需求说不清就回群问"],
-    out:["已建单的待办（todo）","补齐的上下文与证据引用"],
-    note:"它是待办列表的写入方之一：建单和维护都由它直接落笔，不再经调度转手。调度因此只剩读和派，压力被卸到这一层。"},
+    note:"曾有 agent 堆到 5 条，所有任务一起变慢。"},
+
+  todo:{name:"待办列表",tag:"建单 / 认领 / 交验 / 关单，各有其人",
+    duty:["四态：todo → in_progress → review → done","需求整理建单，只改 todo 态内容，不碰状态裁决与派活","干活方认领 → in_progress、附证据完成 → review","done 只由调度在验收通过后改；派单走 task delegate","新增前查重：能改就改，不新开一条"],
+    flow:["房主提需求 → 需求整理查重建单（todo）","调度读表 → task delegate 派给唯一 owner","认领（in_progress）→ 附证据完成（review）","验收通过 → 调度关单（done）"],
+    out:["一眼可见的状态表","谁改的、何时改的记录"],
+    note:"没改状态 = 没认领；改了 review 但没附证据 = 没做完。房主在已完成需求上报出新问题，调度退回 review 重开，不新开一条。"},
+
+  intake:{name:"需求整理 · 机器人",tag:"只建单 / 改 todo 态内容",
+    duty:["接住房主一句话 + 截图式的原始需求","补齐上下文、拆成可执行的判据与范围","查重后建单（todo），只维护条目内容","不碰状态裁决、不派活、不动代码；歧义回群问"],
+    flow:["房主提需求","查 htalk task 是否已有同需求","补齐上下文 → 建单 / 改原单 → todo"],
+    out:["已建单的待办","补齐的上下文与引用"],
+    note:"标题用原话不加前缀；它替调度卸掉「原始需求 → 可执行任务」这一段，但不替调度做判断。"},
+
   logs:{name:"运行日志（纸卷）",tag:"判断活没活的唯一证据",
     duty:["daemon 日志能看出 agent 在不在动","CPU / mtime 都可能骗人"],
     flow:["grep tool open/close","看最后一次调用时间","超过 30 分钟静默才可疑"],
-    out:["活/挂的判断"],
+    out:["活 / 挂的判断"],
     note:"文件 mtime 最不可信——长任务写盘是间歇的。"},
+
   clipboard:{name:"剪贴板",tag:"最容易假通过的地方",
     duty:["复制类功能必须读回内容验证","不能只看有没有 toast"],
     flow:["点击 → 读回剪贴板","核对格式（引用应是定位串而非正文）"],
     out:["实际内容原文"],
     note:"代码写了、内容为空或格式错，是这类功能的常见失败。"},
+
   gate:{name:"门禁脚本（终端）",tag:"自动化的关口",
-    duty:["零崩溃 / 发布包冒烟 / UI 文案拦截","按改动范围扫，共用文件才全仓扫"],
-    flow:["push 前跑","输出文件:行 + 命中词 + 所属端","红了就修，不许绕过"],
+    duty:["SMOKE-CHAT-3X / 发布包冒烟 / UI 文案拦截","按改动范围扫，共用文件才全仓扫"],
+    flow:["push 前跑 spec/pre_push_gate.sh","输出文件:行 + 命中词 + 所属端","红了就修，不许绕过"],
     out:["PASS / FAIL / BLOCKED"],
-    note:"会假绿的门槛比没有门槛更危险。"},
+    note:"会假绿的门槛比没有门槛更危险；环境异常判 BLOCKED。"},
 
   device:{name:"真机（房主手机）",tag:"最终验证的地方",
     duty:["装发布包，按真实用户路径走一遍","发现模拟器复现不了的问题：density / 字体缩放 / 手势","反馈「看起来不对」——哪怕说不出原因"],
-    flow:["拿到预览包 → 装机","用真实场景走：进会话、发消息、复制、切主题","把现象（截图 + 一句话）发回来"],
+    flow:["拿预览包 → 装机","走真实场景：进会话、发消息、复制、切主题","把现象（截图 + 一句话）发回群里"],
     out:["真实体验反馈","新一批需求"],
-    note:"真机与模拟器的差别不在逻辑，在观感：字号、间距、动画手感、颜色对比。今天「气泡太黑」「输入条浮着」都只有真机才看得出来。"}
+    note:"真机差别不在逻辑，在观感：字号、间距、动画手感、颜色对比。"}
 };
 
 // 注入托盘用 symbol
