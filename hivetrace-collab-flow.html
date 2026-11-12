@@ -406,14 +406,14 @@
     </g>
 
     <!-- 主流程连线：房主 → 需求整理 →（直接写）待办列表 -->
-    <path id="p0a" class="flow" d="M471 372 L420 372 L420 130 L313 130" marker-end="url(#arw4)"/>
-    <path id="p0b" class="intakeline" d="M294 146 L294 188" marker-end="url(#arwIntake)"/>
-    <text class="stag" x="368" y="120">提需求</text>
-    <text class="stag intake" x="312" y="182" style="text-anchor:start">建单 · 直接写表</text>
+    <path id="p0a" class="flow" d="M313 200 L487 200" marker-end="url(#arw4)"/>
+    <path id="p0b" class="intakeline" d="M500 224 L500 298" marker-end="url(#arwIntake)"/>
+    <text class="stag" x="400" y="190">提需求</text>
+    <text class="stag intake" x="410" y="282" style="text-anchor:end">建单 · 直接写表</text>
 
     <!-- 调度 → 开发：派单（含指派改表） -->
     <path id="p1" class="flow" d="M700 287 L700 380" marker-end="url(#arw4)"/>
-    <text class="stag" x="714" y="336">派单 · 指派更新</text>
+    <text class="stag" x="714" y="372">派单 · 指派更新</text>
 
     <!-- 调度发起验收（左侧通道） -->
     <path id="p1c" class="flow" d="M686 268 L620 268 L620 490 L664 490" marker-end="url(#arw4)"/>
@@ -425,16 +425,16 @@
 
     <!-- 验收 → 调度：退回重做 -->
     <path id="b0" class="back" d="M668 486 C 600 470, 600 330, 676 288" marker-end="url(#arw3)"/>
-    <text class="backlbl" x="505" y="466">不通过 → 退回重排</text>
+    <text class="backlbl" x="540" y="484">不通过 → 退回重排</text>
 
-    <!-- 发布 → 真机 → 房主：体验反馈闭环 -->
-    <path id="r0" class="ret" d="M690 664 L560 664 L560 560 L500 560" marker-end="url(#arw2)"/>
-    <path id="r1" class="ret" d="M480 536 L480 402" marker-end="url(#arw2)"/>
-    <text class="retlbl" x="596" y="688">发布 → 真机体验 → 反馈</text>
+    <!-- 发布 → 真机 → 房主：体验反馈闭环（沿底部绕回左上） -->
+    <path id="r0" class="ret" d="M684 657 L400 657 L400 598 L318 598" marker-end="url(#arw2)"/>
+    <path id="r1" class="ret" d="M300 578 L300 222" marker-end="url(#arw2)"/>
+    <text class="retlbl" x="500" y="678">发布 → 真机体验 → 反馈</text>
 
     <!-- 房主 → 观察：在群里商讨流程缺陷（观察者不主动找房主，故单向） -->
-    <path id="d0" class="talk" d="M493 372 L600 372 L600 175 L844 175" marker-end="url(#arwTalk)"/>
-    <text class="talklbl" x="660" y="167" style="text-anchor:middle">商讨流程缺陷</text>
+    <path id="d0" class="talk" d="M313 212 L313 240 L846 240 L846 182" marker-end="url(#arwTalk)"/>
+    <text class="talklbl" x="560" y="230" style="text-anchor:middle">商讨流程缺陷</text>
 
     <!-- 流动点 -->
     <circle class="dot" r="2.3"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#p0a"/></animateMotion></circle>
@@ -450,7 +450,7 @@
 
     <!-- 房主 + 真机（中列枢纽：真机在房主下方，反馈直上） -->
     <g class="hit" data-k="device">
-      <g transform="translate(465,538)">
+      <g transform="translate(285,578)">
         <!-- 机身 -->
         <rect x="2.6" y="0.6" width="28" height="40" rx="5.6" fill="#0f1316" stroke="#8f959b" stroke-width="1.4"/>
         <path d="M12.4 3.6h7.2" stroke="#8f959b" stroke-width="1.2" stroke-linecap="round"/>
@@ -475,23 +475,23 @@
         </rect>
         <circle cx="16.6" cy="37" r="1.8" fill="none" stroke="#8f959b" stroke-width="1.2"/>
       </g>
-      <text class="envt" x="481" y="602">真机</text>
+      <text class="envt" x="300" y="642">真机</text>
     </g>
 
     <g class="hit" data-k="owner">
-      <circle class="hub" cx="482" cy="382" r="34"/>
-      <circle cx="482" cy="382" r="23" fill="#191d21" stroke="#5c6168" stroke-width="1.2"/>
-      <g transform="translate(466,362)">
+      <circle class="hub" cx="300" cy="200" r="34"/>
+      <circle cx="300" cy="200" r="23" fill="#191d21" stroke="#5c6168" stroke-width="1.2"/>
+      <g transform="translate(284,182)">
         <g class="sym">
           <circle cx="16" cy="11" r="5.2"/><path d="M5 36c.6-8.4 5-13.4 11-13.4S26.4 27.6 27 36"/>
         </g>
       </g>
-      <text class="lbl" x="482" y="428">房主</text>
+      <text class="lbl" x="300" y="246">房主</text>
     </g>
 
     <!-- 需求整理：接收房主需求，直接操作待办列表（建单 / 维护） -->
     <g class="hit" data-k="intake">
-      <g transform="translate(284,102)">
+      <g transform="translate(484,182)">
         <g class="rbot c-intake">
           <path d="M16 8V3.4"/><circle cx="16" cy="2.3" r="1.4"/>
           <rect x="5.5" y="8" width="21" height="15" rx="3.4"/>
@@ -506,8 +506,8 @@
           </g>
         </g>
       </g>
-      <text class="lbl" x="300" y="82">需求整理</text>
-      <text class="sub" x="300" y="96">直接建单 · 维护</text>
+      <text class="lbl" x="500" y="156">需求整理</text>
+      <text class="sub" x="500" y="170">直接建单 · 维护</text>
     </g>
 
 
@@ -539,7 +539,7 @@
     </g>
 
     <!-- 观察 -->
-    <path class="obsline" d="M732 252 L846 196"/>
+    <path class="obsline" d="M724 250 L844 200"/>
     <g class="hit" data-k="flow">
       <g transform="translate(844,163)">
         <g class="rbot dim c-obs">
@@ -550,7 +550,7 @@
           <path d="M8 34h16"/>
         </g>
       </g>
-      <text class="sub" x="861" y="217">观察 · 归因</text>
+      <text class="sub" x="861" y="160">观察 · 归因</text>
     </g>
 
     <!-- 规则 · 脚本 -->
@@ -680,17 +680,17 @@
     </g>
 
     <!-- 待办列表：需求整理直接写 / 调度只读 / 开发受指派写 -->
-    <path id="p-todo" class="todoline" d="M686 262 L362 262" marker-end="url(#arw2)"/>
-    <text class="stag" x="520" y="254">只读 · 巡检</text>
+    <path id="p-todo" class="todoline" d="M686 262 L640 262 L640 330 L581 330" marker-end="url(#arw2)"/>
+    <text class="stag" x="612" y="254">只读 · 巡检</text>
     <circle class="dot w" r="2.2"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#p-todo"/></animateMotion></circle>
 
     <!-- 开发 agent 受调度指派更新状态 -->
-    <path id="p-devwrite" class="devline" d="M636 396 L560 396 L560 310 L362 310" marker-end="url(#arwDev)"/>
-    <text class="stag dev" x="480" y="300" style="text-anchor:middle">受指派更新</text>
+    <path id="p-devwrite" class="devline" d="M636 400 L600 400 L600 420 L581 420" marker-end="url(#arwDev)"/>
+    <text class="stag dev" x="540" y="442" style="text-anchor:middle">受指派更新</text>
     <circle class="dot devw" r="2.2"><animateMotion dur="2.2s" repeatCount="indefinite" begin=".4s"><mpath href="#p-devwrite"/></animateMotion></circle>
 
     <g class="hit" data-k="todo">
-      <g transform="translate(200,190)">
+      <g transform="translate(421,300)">
         <rect class="todo-node" width="158" height="124" rx="12"/>
         <!-- 列表符号 -->
         <g stroke="#7d8288" stroke-width="1.1" fill="none" stroke-linecap="round">
