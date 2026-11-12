@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HiveTrace · 协作架构</title>
+<style>
+  :root{
+    --panel:#15181b; --line:#262a2e; --ink:#e9e7e2; --dim:#8b8d8a;
+    --ok:#6ee7a8; --opt:#e7c46e; --bad:#e7796e;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 620px at 50% -10%,#171b1f 0%,#0d0f11 62%)}
+  body{color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;
+       min-height:100vh;padding:32px 18px 52px}
+  .wrap{max-width:1000px;margin:0 auto}
+  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:2px}
+  h1{font-size:15px;font-weight:600;letter-spacing:.02em;margin:0}
+  .stamp{font-size:11px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+
+  svg{width:100%;height:auto;display:block;overflow:visible;margin-top:8px}
+
+  /* 角色容器：圆形徽章 */
+  .ava{fill:#1b1f22;stroke:#2e3338;stroke-width:1;transition:stroke .25s,fill .25s}
+  .ava.me{stroke:#4a4f55}
+  .ava.gate{stroke:var(--ok);stroke-opacity:.5}
+  .ava.owner{stroke:#5c6168}
+
+  .sym{stroke:#c9ccd1;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s}
+  .sym.dim{stroke:#7d8288}
+  .sym.ok{stroke:var(--ok)}
+  .sym.opt{stroke:var(--opt)}
+  .sym.me{stroke:#a9aeb4}
+
+  /* 环境容器：物体本体，无外圈 */
+  .esym{fill:#1a1e22;stroke:#6f747a;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;
+        transition:stroke .25s,fill .25s}
+  .esym .hi{fill:#20252a;stroke:none}
+
+  .lbl{fill:var(--ink);font-size:12px;font-weight:500;text-anchor:middle;letter-spacing:.02em}
+  .sub{fill:var(--dim);font-size:10px;text-anchor:middle;letter-spacing:.06em}
+  .envt{fill:#6f7378;font-size:9.5px;text-anchor:middle;letter-spacing:.05em}
+
+  .flow{fill:none;stroke:#7f858c;stroke-width:1.4;stroke-dasharray:5 7;animation:dash 2.6s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-48}}
+  .obsline{fill:none;stroke:#4a4f55;stroke-width:1.2;stroke-dasharray:2 5}
+  .loop{fill:none;stroke:var(--opt);stroke-width:1.3;stroke-opacity:.75;
+        stroke-dasharray:4 6;animation:dash 3.4s linear infinite}
+  .envline{fill:none;stroke:#3a3f45;stroke-width:1;stroke-dasharray:1 4}
+
+  .dot{fill:var(--ink);opacity:.9}
+  .dot.g{fill:var(--ok)}
+  .dot.y{fill:var(--opt)}
+  .dot.w{fill:#a9aeb4}
+
+  .ret{fill:none;stroke:#a9aeb4;stroke-width:1.3;stroke-opacity:.55}
+  .back{fill:none;stroke:#e7796e;stroke-width:1.3;stroke-opacity:.5;stroke-dasharray:5 6;
+        animation:dash 3.2s linear infinite}
+  .backlbl{fill:#c07b72;font-size:9.5px;letter-spacing:.08em}
+  .dot.r{fill:#e7796e}
+  .dot.up{fill:#a9c9d6}
+  .flow.up{stroke-dasharray:2 6}
+  .stag{fill:#7d8288;font-size:9px;letter-spacing:.08em}
+  .retlbl{fill:#7d8288;font-size:9.5px;letter-spacing:.12em;text-anchor:middle}
+
+  /* 群 · 共享上下文 底衬 */
+  .ctxband{fill:#ffffff;fill-opacity:.012;stroke:#3a4046;stroke-opacity:.5;
+           stroke-width:1;stroke-dasharray:7 9}
+  .ctxt{fill:#5f6469;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase}
+  .ctxsub{fill:#4d5257;font-size:9px;letter-spacing:.06em}
+
+  .ring{animation:breathe 5s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.35}50%{opacity:.9}}
+
+  /* 观察锥形扫描：CSS 驱动，可被告警态暂停 */
+  .sweep{transform-box:view-box;transform-origin:800px 182px;
+         animation:sweepSwing 6s ease-in-out infinite}
+  @keyframes sweepSwing{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(18deg)}}
+  .cone-normal{fill:url(#cone);transition:opacity .35s ease}
+  .cone-alert{fill:url(#coneAlert);opacity:0;transition:opacity .35s ease}
+  .sweep.alert{animation-play-state:paused}
+  .sweep.alert .cone-normal{opacity:0}
+  .sweep.alert .cone-alert{opacity:1}
+
+  .lane{fill:#101214;stroke:#202428;stroke-width:1}
+  .lane-t{fill:#5f6469;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase}
+  .node-opt{fill:#191713;stroke:var(--opt);stroke-opacity:.5;stroke-width:1.2}
+
+  .hit{cursor:pointer}
+  .hit:hover .sym{stroke:#e9e7e2}
+  .hit:hover .esym{stroke:#a9aeb4;fill:#1f2429}
+  .hit.active .sym{stroke:var(--ok)}
+  .hit.active .esym{stroke:var(--opt);fill:#221e15}
+  .rbot{fill:#1a1e22;stroke:#b9bec4;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;transition:stroke .25s,fill .25s}
+  .rbot .panel{fill:#20252a;stroke:#b9bec4;stroke-width:1.2}
+  .rbot .eye{fill:#cfd3d8;stroke:none}
+  .rbot.dim{stroke:#7d8288}
+  .rbot.dim .panel{stroke:#7d8288}
+  .rbot.dim .eye{fill:#8b9096}
+  .rbot.ok{stroke:var(--ok)}
+  .rbot.ok .panel{stroke:var(--ok)}
+  .rbot.ok .eye{fill:var(--ok)}
+  .rbot.me{stroke:#a9aeb4}
+  /* 角色配色 + 发光 */
+  .c-sched{stroke:#e7c46e !important;filter:drop-shadow(0 0 5px rgba(231,196,110,.45))}
+  .c-sched .eye{fill:#e7c46e}
+  .c-obs{stroke:#7fd7e0 !important;filter:drop-shadow(0 0 5px rgba(127,215,224,.45))}
+  .c-obs .eye{fill:#7fd7e0}
+  .c-dev{stroke:#7aa2f7 !important;filter:drop-shadow(0 0 5px rgba(122,162,247,.42))}
+  .c-dev .eye{fill:#7aa2f7}
+  .c-verify{stroke:#6ee7a8 !important;filter:drop-shadow(0 0 6px rgba(110,231,168,.5))}
+  .c-verify .eye{fill:#6ee7a8}
+  .c-build{stroke:#c4a3f7 !important;filter:drop-shadow(0 0 5px rgba(196,163,247,.42))}
+  .c-build .eye{fill:#c4a3f7}
+  .c-pub{stroke:#e7a06e !important;filter:drop-shadow(0 0 5px rgba(231,160,110,.45))}
+  .c-pub .eye{fill:#e7a06e}
+  .tape{stroke-dasharray:4 4;animation:dash 1.1s linear infinite}
+  .spark{animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:.15}50%{opacity:1}}
+
+  .legend{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;margin-top:6px;
+          font-size:11px;color:var(--dim);letter-spacing:.03em}
+  .legend i{display:inline-block;width:26px;height:0;border-top:1.6px dashed #7f858c;
+            vertical-align:middle;margin-right:7px;position:relative;top:-2px}
+  .legend i.obs{border-top-style:dotted;border-top-color:#4a4f55}
+  .legend i.opt{border-top-color:var(--opt)}
+  .legend i.ret{border-top-style:solid;border-top-color:#a9aeb4;opacity:.75}
+  .legend b{color:#cfd3d7;font-weight:500}
+
+  .tray{margin-top:26px;border:1px solid var(--line);border-radius:14px;
+        background:linear-gradient(180deg,#111417,#0e1114);padding:16px 18px 14px}
+  .tray-h{font-size:10px;letter-spacing:.16em;color:#5f6469;text-transform:uppercase;margin-bottom:12px}
+  .tray-g{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  @media(max-width:860px){.tray-g{grid-template-columns:repeat(4,1fr)}}
+  .item{cursor:pointer;border:1px solid transparent;border-radius:10px;padding:10px 4px 8px;text-align:center;
+        transition:background .2s,border-color .2s}
+  .item:hover{background:#171b1f;border-color:#232830}
+  .item.active{background:#191e22;border-color:var(--opt)}
+  .item svg{width:34px;height:34px;display:block;margin:0 auto 8px}
+  .item .n{font-size:10px;color:#9a9e9c;letter-spacing:.02em}
+  .item:hover .n{color:var(--ink)}
+
+  .maint{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+  .chip{font-size:11px;letter-spacing:.05em;color:var(--dim);border:1px solid var(--line);
+        border-radius:99px;padding:5px 13px;background:#121517;display:flex;align-items:center;gap:7px}
+  .chip b{color:var(--ink);font-weight:600}
+  .chip::before{content:"";width:6px;height:6px;border-radius:99px;background:var(--ok);animation:ring 2.8s infinite}
+  .chip.warn::before{background:var(--opt);animation-name:ringY}
+  .chip.red::before{background:var(--bad);animation-name:ringR}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(110,231,168,.45)}70%{box-shadow:0 0 0 9px rgba(110,231,168,0)}100%{box-shadow:0 0 0 0 rgba(110,231,168,0)}}
+  @keyframes ringY{0%{box-shadow:0 0 0 0 rgba(231,196,110,.45)}70%{box-shadow:0 0 0 9px rgba(231,196,110,0)}100%{box-shadow:0 0 0 0 rgba(231,196,110,0)}}
+  @keyframes ringR{0%{box-shadow:0 0 0 0 rgba(231,121,110,.45)}70%{box-shadow:0 0 0 9px rgba(231,121,110,0)}100%{box-shadow:0 0 0 0 rgba(231,121,110,0)}}
+
+  .hint{text-align:center;font-size:11px;color:#5f6469;margin-top:10px;letter-spacing:.04em}
+  #sheet{position:fixed;top:0;right:0;height:100vh;width:min(430px,92vw);
+    background:linear-gradient(180deg,#121619,#0e1114);border-left:1px solid var(--line);
+    transform:translateX(102%);transition:transform .32s cubic-bezier(.2,.8,.2,1);
+    overflow-y:auto;padding:28px 26px 60px;z-index:20;box-shadow:-30px 0 60px rgba(0,0,0,.5)}
+  #sheet.open{transform:translateX(0)}
+  #sheet h2{font-size:17px;margin:0 0 4px}
+  #sheet .role-tag{font-size:10.5px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px}
+  #sheet .sec{margin-top:20px}
+  #sheet .sec h3{font-size:10.5px;color:var(--opt);letter-spacing:.14em;text-transform:uppercase;margin:0 0 8px;font-weight:600}
+  #sheet ul{margin:0;padding-left:0;list-style:none}
+  #sheet li{position:relative;padding-left:16px;margin:5px 0;color:#cdd1d5;font-size:13px}
+  #sheet li::before{content:"";position:absolute;left:3px;top:9px;width:4px;height:4px;border-radius:99px;background:#4a4f55}
+  #sheet .flowline{display:flex;flex-direction:column}
+  #sheet .step{position:relative;padding:0 0 14px 22px;font-size:13px;color:#cdd1d5}
+  #sheet .step::before{content:"";position:absolute;left:3px;top:6px;width:6px;height:6px;border-radius:99px;background:var(--opt);opacity:.8}
+  #sheet .step::after{content:"";position:absolute;left:5.5px;top:14px;bottom:0;width:1px;background:#2b3035}
+  #sheet .step:last-child::after{display:none}
+  #sheet .step:last-child{padding-bottom:0}
+  #sheet .note{font-size:12px;color:var(--dim);border-left:2px solid #2b3035;padding-left:12px;margin-top:6px}
+  #sheet .x{position:absolute;top:18px;right:20px;cursor:pointer;color:var(--dim);font-size:20px;line-height:1}
+  #sheet .x:hover{color:var(--ink)}
+  #backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s;z-index:10}
+  #backdrop.on{opacity:1;pointer-events:auto}
+
+  /* 需求整理 agent（接收房主需求，替调度卸掉拆解负担） */
+  .c-intake{stroke:#e6a0c4 !important;filter:drop-shadow(0 0 5px rgba(230,160,196,.42))}
+  .c-intake .eye{fill:#e6a0c4}
+
+  /* 待办列表：需求整理直接写 / 调度只读 / 开发受指派写 */
+  .todo-node{fill:#111518;stroke:#3a4046;stroke-width:1.2;transition:stroke .25s,fill .25s}
+  .todo-node-h{fill:#9aa0a4;font-size:10.5px;letter-spacing:.1em}
+  .todo-node-sep{stroke:#2b3035;stroke-width:1}
+  .tl-dot.intake{fill:#e6a0c4}
+  .tl-dot.dev{fill:#7aa2f7}
+  .tl-name{fill:#c9ccd1;font-size:9.5px;letter-spacing:.02em}
+  .tl-who{font-size:8.5px;text-anchor:end;letter-spacing:.03em}
+  .tl-who.intake{fill:#e6a0c4;fill-opacity:.85}
+  .tl-who.dev{fill:#7aa2f7;fill-opacity:.8}
+  .slink{fill:none;stroke:#4a5057;stroke-width:1;stroke-dasharray:2 4}
+  .todoline{fill:none;stroke:#8f959b;stroke-width:1.2;stroke-dasharray:3 5;
+            animation:dash 3s linear infinite}
+  .devline{fill:none;stroke:#7aa2f7;stroke-opacity:.7;stroke-width:1.3;
+           stroke-dasharray:5 4;animation:dash 2.4s linear infinite}
+  .stag.dev{fill:#7aa2f7;fill-opacity:.9}
+  .stag.intake{fill:#e6a0c4;fill-opacity:.95}
+  .dot.devw{fill:#7aa2f7}
+  .dot.intakew{fill:#e6a0c4}
+  .intakeline{fill:none;stroke:#e6a0c4;stroke-opacity:.72;stroke-width:1.3;
+              stroke-dasharray:5 4;animation:dash 2.6s linear infinite}
+  .tgate{fill:#101815;stroke:var(--ok);stroke-opacity:.7;stroke-width:1.2}
+  .tgate-t{fill:var(--ok);font-size:8.5px;text-anchor:middle;letter-spacing:.08em}
+  .hit:hover .todo-node{stroke:#8f959b;fill:#161b1f}
+  .hit.active .todo-node{stroke:var(--opt);fill:#191d20}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>协作架构</h1>
+    <div class="stamp">11-10 · 机器人 = 角色，物件 = 环境</div>
+  </header>
+
+  <svg viewBox="0 0 1000 790" role="img" aria-label="角色、环境、待办状态与自我优化回路">
+    <defs>
+      <marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#e7c46e" opacity=".8"/>
+      </marker>
+      <marker id="arw2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#a9aeb4" opacity=".85"/>
+      </marker>
+      <marker id="arw4" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#8f959b" opacity=".9"/>
+      </marker>
+      <marker id="arw3" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#e7796e" opacity=".8"/>
+      </marker>
+      <marker id="arwDev" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#7aa2f7" opacity=".9"/>
+      </marker>
+      <marker id="arwIntake" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#e6a0c4" opacity=".9"/>
+      </marker>
+
+      <!-- 机器人 -->
+      <symbol id="i-bot" viewBox="0 0 24 24">
+        <path d="M12 4.2V2.6"/><circle cx="12" cy="2.1" r="1.1"/>
+        <rect x="4.6" y="5.4" width="14.8" height="11.8" rx="3.6"/>
+        <circle cx="9.1" cy="10.6" r="1.35"/><circle cx="14.9" cy="10.6" r="1.35"/>
+        <path d="M9.4 14.3h5.2"/>
+        <path d="M4.6 9.6H3.2v3.4h1.4M19.4 9.6h1.4v3.4h-1.4"/>
+      </symbol>
+
+      <symbol id="i-gear" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3.1"/>
+        <path d="M12 3.4v2.2M12 18.4v2.2M3.4 12h2.2M18.4 12h2.2M6.1 6.1l1.6 1.6M16.3 16.3l1.6 1.6M17.9 6.1l-1.6 1.6M7.7 16.3l-1.6 1.6"/>
+      </symbol>
+
+      <!-- 物体：手机（机身+屏幕+听筒+Home） -->
+      <symbol id="i-phone" viewBox="0 0 32 40">
+        <rect x="4" y="2" width="24" height="36" rx="5"/>
+        <rect class="hi" x="7" y="6.5" width="18" height="24" rx="2"/>
+        <path d="M13 4.4h6"/><circle cx="16" cy="34" r="1.6"/>
+      </symbol>
+
+      <!-- 物体：双机 -->
+      <symbol id="i-dual" viewBox="0 0 32 40">
+        <rect x="2" y="6" width="15" height="28" rx="3.6"/>
+        <rect class="hi" x="4.4" y="9.4" width="10.2" height="18" rx="1.6"/>
+        <rect x="15" y="10" width="15" height="26" rx="3.6"/>
+        <rect class="hi" x="17.4" y="13.2" width="10.2" height="16.4" rx="1.6"/>
+      </symbol>
+
+      <!-- 物体：分支板（三节点 + 连线，做成小铭牌） -->
+      <symbol id="i-branch" viewBox="0 0 32 40">
+        <rect x="3" y="4" width="26" height="32" rx="4"/>
+        <circle cx="11" cy="13" r="2.6"/><circle cx="11" cy="27" r="2.6"/><circle cx="21" cy="20" r="2.6"/>
+        <path d="M11 15.6v8.8M13.6 13h4.8a3.4 3.4 0 0 1 3.4 3.4v1"/>
+      </symbol>
+
+      <!-- 物体：文件夹 -->
+      <symbol id="i-folder" viewBox="0 0 32 40">
+        <path d="M3 10.4a2.4 2.4 0 0 1 2.4-2.4h6.2l2.8 3.2h12.2a2.4 2.4 0 0 1 2.4 2.4v15.2a2.4 2.4 0 0 1-2.4 2.4H5.4A2.4 2.4 0 0 1 3 28.8z"/>
+        <path d="M3 14.6h26"/>
+      </symbol>
+
+      <!-- 物体：终端窗口 -->
+      <symbol id="i-term" viewBox="0 0 32 40">
+        <rect x="2" y="7" width="28" height="26" rx="3"/>
+        <path d="M2 13.4h28"/>
+        <circle cx="6.2" cy="10.2" r="1"/><circle cx="9.4" cy="10.2" r="1"/><circle cx="12.6" cy="10.2" r="1"/>
+        <path d="M7.4 18.4l3.4 2.8-3.4 2.8"/><path d="M13.4 24h6.4"/>
+      </symbol>
+
+      <!-- 物体：磁盘 -->
+      <symbol id="i-disk" viewBox="0 0 32 40">
+        <rect x="3" y="13" width="26" height="14" rx="3"/>
+        <path d="M3 17.4h26"/><circle cx="24" cy="22.6" r="1.5"/><path d="M7 22.6h10"/>
+      </symbol>
+
+      <!-- 物体：包裹 -->
+      <symbol id="i-pack" viewBox="0 0 32 40">
+        <path d="M16 4l11.4 6v20L16 36 4.6 30V10z"/>
+        <path d="M4.6 10L16 16l11.4-6M16 16v20"/>
+        <path d="M10.3 7.2L21.7 13.2"/>
+      </symbol>
+
+      <!-- 物体：信封 -->
+      <symbol id="i-mail" viewBox="0 0 32 40">
+        <rect x="3" y="11" width="26" height="18" rx="3"/>
+        <path d="M4.2 12.6L16 21.6l11.8-9"/>
+      </symbol>
+
+      <!-- 物体：浏览器窗口 -->
+      <symbol id="i-browser" viewBox="0 0 32 40">
+        <rect x="2" y="8" width="28" height="24" rx="3"/>
+        <path d="M2 15h28"/>
+        <circle cx="6" cy="11.5" r="1"/><circle cx="9.4" cy="11.5" r="1"/><circle cx="12.8" cy="11.5" r="1"/>
+        <path d="M6 19.4h20M6 23.4h14M6 27.4h17"/>
+      </symbol>
+
+      <!-- 物体：文档（折角纸） -->
+      <symbol id="i-doc" viewBox="0 0 32 40">
+        <path d="M7 4h12l7 7v25H7z"/>
+        <path d="M19 4v7h7"/>
+        <path d="M10.6 17h11.2M10.6 21.4h11.2M10.6 25.8h6.6"/>
+      </symbol>
+
+      <!-- 物体：卡片堆 -->
+      <symbol id="i-cards" viewBox="0 0 32 40">
+        <rect x="7" y="4" width="18" height="7" rx="2"/>
+        <rect x="5.5" y="14" width="21" height="7" rx="2"/>
+        <rect x="4" y="24" width="24" height="7" rx="2"/>
+      </symbol>
+
+      <!-- 物体：日志纸卷 -->
+      <symbol id="i-log" viewBox="0 0 32 40">
+        <rect x="6" y="4" width="20" height="30" rx="3"/>
+        <path d="M10 11h12M10 16h12M10 21h8"/>
+        <path d="M6 30h20"/>
+      </symbol>
+
+      <!-- 物体：剪贴板 -->
+      <symbol id="i-clip" viewBox="0 0 32 40">
+        <rect x="6" y="7" width="20" height="27" rx="3"/>
+        <rect x="12" y="3.6" width="8" height="5.6" rx="1.8"/>
+        <path d="M10.4 17h11.2M10.4 22h8"/>
+      </symbol>
+
+      <!-- 物体：对话气泡 -->
+      <symbol id="i-chat" viewBox="0 0 32 40">
+        <path d="M5 8h17a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3H13l-6 5v-5H5a3 3 0 0 1-3-3V11a3 3 0 0 1 3-3z"/>
+        <path d="M8.6 14h11M8.6 18.4h7"/>
+      </symbol>
+
+      <!-- 物体：公告板 -->
+      <symbol id="i-notice" viewBox="0 0 32 40">
+        <rect x="3" y="8" width="26" height="24" rx="3"/>
+        <path d="M10 4v6M22 4v6"/>
+        <path d="M8 16h16M8 21h16M8 26h9"/>
+      </symbol>
+    </defs>
+
+    <!-- 群 · 共享上下文（所有角色都在这个群里读写同一份上下文） -->
+    <rect class="ctxband" x="36" y="30" width="928" height="700" rx="18"/>
+    <text class="ctxt" x="54" y="50">HTALK 群 · 共享上下文</text>
+    <text class="ctxsub" x="54" y="66">消息即任务 · seq 锚点 · 引用可定位 · 公告即约定</text>
+    <g opacity=".5">
+      <rect x="880" y="40" width="44" height="16" rx="8" fill="none" stroke="#3f454b"/>
+      <path d="M888 56l-3 5 7-5z" fill="#3f454b"/>
+      <rect x="906" y="46" width="34" height="14" rx="7" fill="none" stroke="#3f454b"/>
+    </g>
+
+    <defs>
+      <linearGradient id="cone" gradientUnits="userSpaceOnUse"
+                      x1="795" y1="184" x2="62" y2="560">
+        <stop offset="0%"   stop-color="#8ee3ec" stop-opacity=".50"/>
+        <stop offset="22%"  stop-color="#8ee3ec" stop-opacity=".38"/>
+        <stop offset="45%"  stop-color="#8ee3ec" stop-opacity=".24"/>
+        <stop offset="66%"  stop-color="#8ee3ec" stop-opacity=".11"/>
+        <stop offset="84%"  stop-color="#8ee3ec" stop-opacity=".03"/>
+        <stop offset="96%"  stop-color="#8ee3ec" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#8ee3ec" stop-opacity="0"/>
+      </linearGradient>
+      <linearGradient id="coneAlert" gradientUnits="userSpaceOnUse"
+                      x1="795" y1="184" x2="62" y2="560">
+        <stop offset="0%"   stop-color="#ff9384" stop-opacity=".62"/>
+        <stop offset="22%"  stop-color="#ff9384" stop-opacity=".48"/>
+        <stop offset="45%"  stop-color="#e7796e" stop-opacity=".32"/>
+        <stop offset="66%"  stop-color="#e7796e" stop-opacity=".15"/>
+        <stop offset="84%"  stop-color="#e7796e" stop-opacity=".04"/>
+        <stop offset="96%"  stop-color="#e7796e" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#e7796e" stop-opacity="0"/>
+      </linearGradient>
+      <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="6"/>
+      </filter>
+    </defs>
+
+    <!-- 观察的锥形扫描：只剩一束光，随机告警时变红、暂停并收窄 -->
+    <g opacity=".85" class="sweep" id="sweep">
+      <g class="beam">
+        <polygon class="cone-normal" points="795,184 62,352 62,772" filter="url(#soft)"/>
+        <polygon class="cone-alert" points="795,184 62,438 62,686" filter="url(#soft)"/>
+      </g>
+    </g>
+
+    <!-- 主流程连线：房主 → 需求整理 →（直接写）待办列表 -->
+    <path id="p0a" class="flow" d="M480 64 L590 64" marker-end="url(#arw4)"/>
+    <path id="p0b" class="intakeline" d="M598 108 C 486 122, 384 116, 308 152" marker-end="url(#arwIntake)"/>
+    <text class="stag" x="534" y="56">提需求</text>
+    <text class="stag intake" x="350" y="112" style="text-anchor:middle">建单 · 直接写表</text>
+
+    <!-- 调度 ⇄ 开发：右侧派单（含指派改表），左侧交付 -->
+    <path id="p1" class="flow" d="M492 194 L492 256" marker-end="url(#arw4)"/>
+    <text class="stag" x="502" y="232">派单 · 指派更新</text>
+    <path id="p1b" class="flow up" d="M446 258 L446 198" marker-end="url(#arw4)"/>
+    <text class="stag" x="434" y="232" style="text-anchor:end">交付</text>
+
+    <!-- 调度发起验收（左侧绕行） -->
+    <path id="p1c" class="flow" d="M440 192 C 370 196, 286 236, 272 300 C 258 366, 320 414, 424 424"
+          marker-end="url(#arw4)"/>
+    <text class="stag" transform="translate(256,352) rotate(-90)">发起验收</text>
+
+    <!-- 验收之后 -->
+    <path id="p3" class="flow" d="M470 496 L470 540"/>
+    <path id="p4" class="flow" d="M470 596 L470 634"/>
+
+    <!-- 验收 → 调度：退回重做 -->
+    <path id="b0" class="back" d="M498 410 C 600 400, 640 320, 660 240 C 672 196, 640 178, 552 176"
+          marker-end="url(#arw3)"/>
+    <text class="backlbl" x="586" y="452">不通过 → 退回重排</text>
+
+    <!-- 发布 → 房主：真机体验反馈 -->
+    <path id="r0" class="ret" d="M440 650 C 330 650, 150 640, 132 560 L132 150 C 132 90, 250 62, 386 60"
+          marker-end="url(#arw2)"/>
+    <text class="retlbl" transform="translate(120,470) rotate(-90)"> 发布 → 真机体验 → 反馈 </text>
+
+
+    <!-- 流动点 -->
+    <circle class="dot" r="2.3"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#p0a"/></animateMotion></circle>
+    <circle class="dot intakew" r="2.3"><animateMotion dur="2.4s" repeatCount="indefinite" begin=".4s"><mpath href="#p0b"/></animateMotion></circle>
+    <circle class="dot" r="2.3"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#p1"/></animateMotion></circle>
+    <circle class="dot up" r="2.3"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#p1b"/></animateMotion></circle>
+    <circle class="dot up" r="2.2"><animateMotion dur="3.4s" repeatCount="indefinite" begin=".4s"><mpath href="#p1c"/></animateMotion></circle>
+    <circle class="dot" r="2.5"><animateMotion dur="1.9s" repeatCount="indefinite"><mpath href="#p3"/></animateMotion></circle>
+    <circle class="dot g" r="2.5"><animateMotion dur="1.9s" repeatCount="indefinite"><mpath href="#p4"/></animateMotion></circle>
+    <circle class="dot r" r="2.3"><animateMotion dur="4.6s" repeatCount="indefinite"><mpath href="#b0"/></animateMotion></circle>
+    <circle class="dot w" r="2.3"><animateMotion dur="6.2s" repeatCount="indefinite"><mpath href="#r0"/></animateMotion></circle>
+
+    <!-- 房主 + 真机 -->
+    <g class="hit" data-k="device">
+      <g transform="translate(388,36)">
+        <!-- 机身 -->
+        <rect x="2.6" y="0.6" width="28" height="40" rx="5.6" fill="#0f1316" stroke="#8f959b" stroke-width="1.4"/>
+        <path d="M12.4 3.6h7.2" stroke="#8f959b" stroke-width="1.2" stroke-linecap="round"/>
+        <!-- 亮屏 -->
+        <rect x="6" y="7.4" width="21.2" height="25.4" rx="2.2" fill="#d6f6ff">
+          <animate attributeName="opacity" dur="2.8s" repeatCount="indefinite"
+            values="0.86;0.99;0.90;1;0.88;0.97;0.93;1;0.89;0.95"/>
+        </rect>
+        <!-- 屏上内容（暗示是 App 界面） -->
+        <g opacity=".55" stroke="#2f5a66" stroke-width="1" stroke-linecap="round">
+          <path d="M9 12.4h9"/><path d="M9 16h12"/><path d="M9 19.6h7"/>
+          <rect x="9" y="22.6" width="12.4" height="5.4" rx="1.4" fill="#bfe9f2" stroke="none"/>
+        </g>
+        <!-- 屏幕外发光（叠在最上层） -->
+        <rect x="3" y="4.4" width="27.2" height="31.4" rx="4" fill="#a8ecff" opacity=".3" filter="url(#soft)">
+          <animate attributeName="opacity" dur="2.2s" repeatCount="indefinite"
+            values="0.22;0.42;0.26;0.40;0.24;0.38"/>
+        </rect>
+        <rect x="6" y="7.4" width="21.2" height="3.4" fill="#ffffff" opacity=".18">
+          <animateTransform attributeName="transform" type="translate"
+            values="0 0; 0 22; 0 0" dur="5.2s" repeatCount="indefinite"/>
+        </rect>
+        <circle cx="16.6" cy="37" r="1.8" fill="none" stroke="#8f959b" stroke-width="1.2"/>
+      </g>
+      <text class="envt" x="404" y="100">真机</text>
+    </g>
+
+    <g class="hit" data-k="owner">
+      <g transform="translate(446,44)">
+        <g class="sym">
+          <circle cx="16" cy="11" r="5.2"/><path d="M5 36c.6-8.4 5-13.4 11-13.4S26.4 27.6 27 36"/>
+        </g>
+      </g>
+      <text class="lbl" x="462" y="98">房主</text>
+    </g>
+
+    <!-- 需求整理：接收房主需求，直接操作待办列表（建单 / 维护） -->
+    <g class="hit" data-k="intake">
+      <g transform="translate(596,44)">
+        <g class="rbot c-intake">
+          <path d="M16 8V3.4"/><circle cx="16" cy="2.3" r="1.4"/>
+          <rect x="5.5" y="8" width="21" height="15" rx="3.4"/>
+          <circle class="eye" cx="11.4" cy="14" r="1.5"/><circle class="eye" cx="20.6" cy="14" r="1.5"/>
+          <path d="M12.6 19.2h6.8"/>
+          <!-- 漏斗：散需求收拢成一条待办 -->
+          <path d="M6.6 26h18.8l-7.2 8.2v3.6l-4.4 2v-5.6z"/>
+          <g>
+            <rect x="14.4" y="41" width="3.2" height="4.4" rx=".8"/>
+            <animateTransform attributeName="transform" type="translate"
+              values="0 -4; 0 3; 0 -4" dur="2.2s" repeatCount="indefinite"/>
+          </g>
+        </g>
+      </g>
+      <text class="lbl" x="614" y="98">需求整理</text>
+      <text class="sub" x="614" y="112">直接建单 · 维护</text>
+    </g>
+
+
+    <!-- 调度：操纵杆 -->
+    <g class="hit" data-k="me">
+      <g transform="translate(452,150)">
+        <g class="rbot me c-sched">
+          <path d="M16 9V3.4"/><circle cx="16" cy="2.3" r="1.4"/>
+          <rect x="5.5" y="9" width="21" height="15" rx="3.4"/>
+          <circle class="eye" cx="11.4" cy="15" r="1.5"/><circle class="eye" cx="20.6" cy="15" r="1.5"/>
+          <path d="M12.6 20.2h6.8"/>
+          <circle cx="16" cy="30" r="5"/>
+          <path d="M18.2 27.8l-1.4 3.2-3.2 1.4 1.4-3.2z"/>
+          <!-- 操纵杆（底座 + 杆 + 大手柄，摆动更明显） -->
+          <ellipse cx="30" cy="37" rx="6" ry="2.2"/>
+          <g>
+            <path d="M30 36 L35 22"/>
+            <circle cx="35.4" cy="19.8" r="2.6" class="eye"/>
+            <animateTransform attributeName="transform" type="rotate"
+              values="-13 30 36; 13 30 36; -13 30 36" dur="2.2s" repeatCount="indefinite"/>
+          </g>
+          <circle cx="35.4" cy="19.8" r="2.6" fill="none" opacity=".6">
+            <animate attributeName="r" values="2.6;7" dur="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".6;0" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </g>
+      <text class="lbl" x="470" y="212">调 度</text>
+    </g>
+
+    <!-- 观察 -->
+    <path class="obsline" d="M508 172 L772 172"/>
+    <g class="hit" data-k="flow">
+      <g transform="translate(785,152)">
+        <g class="rbot dim c-obs">
+          <circle cx="16" cy="14" r="9.4"/>
+          <circle cx="16" cy="14" r="3.6"/>
+          <path d="M25.4 9.4l4.4-3.6"/><circle cx="30.6" cy="4.9" r="1.3"/>
+          <path d="M11 23v4M21 23v4"/>
+          <path d="M8 34h16"/>
+        </g>
+      </g>
+      <text class="sub" x="802" y="206">观察 · 归因</text>
+    </g>
+
+    <!-- 规则 · 脚本 -->
+    <g class="hit" data-k="rule">
+      <rect class="node-opt" x="790" y="250" width="132" height="64" rx="14"/>
+      <g transform="translate(818,282)"><use class="sym opt" href="#i-gear" x="-9" y="-9" width="18" height="18"/></g>
+      <text class="lbl" x="878" y="274" style="font-size:11.5px">规则 · 脚本</text>
+      <text class="sub" x="878" y="292">复盘 → 固化</text>
+    </g>
+    <path id="o1" class="loop" d="M802 208 C 828 228, 838 240, 846 254" marker-end="url(#arw)"/>
+    <path id="o2" class="loop" d="M844 306 C 800 348, 700 338, 640 308 C 580 278, 530 224, 512 200" marker-end="url(#arw)"/>
+    <circle class="dot y" r="2.1"><animateMotion dur="2.0s" repeatCount="indefinite"><mpath href="#o1"/></animateMotion></circle>
+    <circle class="dot y" r="2.1"><animateMotion dur="5.0s" repeatCount="indefinite"><mpath href="#o2"/></animateMotion></circle>
+
+    <!-- 项目开发（多机器人 = 并行开发） -->
+    <g class="hit" data-k="dev">
+      <!-- A -->
+      <g transform="translate(372,264)">
+        <g class="rbot c-dev">
+          <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
+          <rect x="4.5" y="7" width="23" height="15" rx="3"/>
+          <circle class="eye" cx="11" cy="14" r="1.4"/><circle class="eye" cx="21" cy="14" r="1.4"/>
+          <path d="M12.4 18.6h7.2"/>
+          <path d="M13 25l-2.6 3.2L13 31.4"/><path d="M19 25l2.6 3.2L19 31.4"/>
+        </g>
+      </g>
+      <!-- B（装配动效） -->
+      <g transform="translate(416,268)">
+        <g class="rbot c-dev">
+          <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
+          <rect x="4.5" y="7" width="23" height="15" rx="3"/>
+          <circle class="eye" cx="11" cy="14" r="1.4"/><circle class="eye" cx="21" cy="14" r="1.4"/>
+          <path d="M12.4 18.6h7.2"/>
+          <path d="M13 25l-2.6 3.2L13 31.4"/><path d="M19 25l2.6 3.2L19 31.4"/>
+          <rect x="0" y="30" width="5" height="5" rx="1" fill="none">
+            <animateTransform attributeName="transform" type="translate"
+              values="-4 0; 3 0; 3 0; -4 0" dur="2.4s" repeatCount="indefinite"/>
+          </rect>
+          <rect x="27" y="30" width="5" height="5" rx="1" fill="none">
+            <animateTransform attributeName="transform" type="translate"
+              values="4 0; -3 0; -3 0; 4 0" dur="2.4s" repeatCount="indefinite"/>
+          </rect>
+          <circle class="spark" cx="16" cy="32.5" r="1.6" fill="#7aa2f7" style="animation-delay:.9s"/>
+        </g>
+      </g>
+      <!-- C -->
+      <g transform="translate(460,264)">
+        <g class="rbot c-dev">
+          <path d="M16 7V3"/><circle cx="16" cy="2.2" r="1.3"/>
+          <rect x="4.5" y="7" width="23" height="15" rx="3"/>
+          <circle class="eye" cx="11" cy="14" r="1.4"/><circle class="eye" cx="21" cy="14" r="1.4"/>
+          <path d="M12.4 18.6h7.2"/>
+          <path d="M13 25l-2.6 3.2L13 31.4"/><path d="M19 25l2.6 3.2L19 31.4"/>
+        </g>
+      </g>
+      <text class="lbl" x="452" y="336">项 目 开 发 · 并 行</text>
+    </g>
+    <g class="hit" data-k="env-dev">
+      <path class="envline" d="M512 292 L548 292"/>
+      <g transform="translate(552,276)"><use class="esym" href="#i-phone" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(592,276)"><use class="esym" href="#i-dual" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(632,276)"><use class="esym" href="#i-branch" x="0" y="0" width="26" height="33"/></g>
+      <g transform="translate(672,276)"><use class="esym" href="#i-folder" x="0" y="0" width="26" height="33"/></g>
+      <text class="envt" x="622" y="332">双端设备 · 分支 · 工作区</text>
+    </g>
+
+    <!-- 验收 -->
+    <g class="hit" data-k="verify">
+      <circle class="ring" cx="470" cy="452" r="34" fill="none" stroke="#6ee7a8" stroke-opacity=".14"/>
+      <g transform="translate(453,432)">
+        <g class="rbot ok c-verify">
+          <path d="M16 4l10 4.4v8.2c0 6.4-4.4 10.8-10 12.8-5.6-2-10-6.4-10-12.8V8.4z"/>
+          <circle class="eye" cx="12.6" cy="14" r="1.4"/><circle class="eye" cx="19.4" cy="14" r="1.4"/>
+          <path d="M12.4 20l3 3 5-5.4"/>
+          <path d="M16 30v4M9 36h14"/>
+          <g>
+            <rect x="11" y="-9" width="10" height="4" rx="1.4"/>
+            <path d="M13.4 -5 L13.4 -2 M18.6 -5 L18.6 -2"/>
+            <animateTransform attributeName="transform" type="translate"
+              values="0 -4; 0 6; 0 6; 0 -4" dur="2s" repeatCount="indefinite"/>
+          </g>
+          <circle cx="16" cy="10" r="3" fill="none" opacity=".55">
+            <animate attributeName="r" values="2;9" dur="2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".55;0" dur="2s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </g>
+      <text class="lbl" x="470" y="500">验 收 · 门 禁</text>
+    </g>
+
+    <!-- 出包 -->
+    <g class="hit" data-k="build">
+      <g transform="translate(453,548)">
+        <g class="rbot c-build">
+          <rect x="8" y="2.6" width="16" height="11" rx="3"/>
+          <circle class="eye" cx="12.4" cy="8" r="1.3"/><circle class="eye" cx="19.6" cy="8" r="1.3"/>
+          <path d="M13 11h6"/>
+          <path d="M3 16h26v18H3z"/>
+          <path d="M3 21h26M16 16v18"/>
+          <path class="tape" d="M4 16h24" stroke="#c4a3f7" stroke-width="2.2" fill="none" opacity=".9"/>
+        </g>
+      </g>
+      <text class="sub" x="470" y="598">出包</text>
+    </g>
+
+    <!-- 发布 -->
+    <g class="hit" data-k="publish">
+      <g transform="translate(453,640)">
+        <g class="rbot c-pub">
+          <rect x="7" y="9" width="18" height="12" rx="3"/>
+          <circle class="eye" cx="12" cy="15" r="1.3"/><circle class="eye" cx="20" cy="15" r="1.3"/>
+          <path d="M13 18h6"/>
+          <path d="M16 9V5.6"/>
+          <path d="M22.6 4.4a5.6 5.6 0 0 1 4.6 4.6"/>
+          <path d="M10 21v6M22 21v6M6 30h20"/>
+          <circle cx="16" cy="5" r="3" fill="none">
+            <animate attributeName="r" values="3;14" dur="2.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".75;0" dur="2.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="16" cy="5" r="3" fill="none">
+            <animate attributeName="r" values="3;14" dur="2.2s" begin="1.1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values=".75;0" dur="2.2s" begin="1.1s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </g>
+      <text class="sub" x="470" y="690">发布</text>
+    </g>
+
+    <!-- 待办列表：需求整理直接写 / 调度只读 / 开发受指派写 -->
+    <path id="p-todo" class="todoline" d="M310 172 L444 172" marker-end="url(#arw2)"/>
+    <text class="stag" x="376" y="163">只读 · 巡检</text>
+    <circle class="dot w" r="2.2"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#p-todo"/></animateMotion></circle>
+
+    <!-- 开发 agent 受调度指派更新状态 -->
+    <path id="p-devwrite" class="devline" d="M368 300 C 344 290, 324 278, 308 264" marker-end="url(#arwDev)"/>
+    <text class="stag dev" x="338" y="308" style="text-anchor:middle">受指派更新</text>
+    <circle class="dot devw" r="2.2"><animateMotion dur="2.2s" repeatCount="indefinite" begin=".4s"><mpath href="#p-devwrite"/></animateMotion></circle>
+
+    <g class="hit" data-k="todo">
+      <g transform="translate(150,140)">
+        <rect class="todo-node" width="158" height="124" rx="12"/>
+        <!-- 列表符号 -->
+        <g stroke="#7d8288" stroke-width="1.1" fill="none" stroke-linecap="round">
+          <rect x="13" y="10" width="12" height="12" rx="2"/>
+          <path d="M17 14h4M17 18h4"/>
+        </g>
+        <text class="todo-node-h" x="33" y="20">待办列表</text>
+        <path class="todo-node-sep" d="M12 29 H146"/>
+
+        <circle class="tl-dot intake" cx="20" cy="45" r="2.8"/>
+        <text class="tl-name" x="30" y="48">todo</text>
+        <text class="tl-who intake" x="146" y="48">需求整理 · 建单</text>
+
+        <circle class="tl-dot dev" cx="20" cy="69" r="2.8"/>
+        <text class="tl-name" x="30" y="72">in_progress</text>
+        <text class="tl-who dev" x="146" y="72">开发 · 领活</text>
+
+        <circle class="tl-dot dev" cx="20" cy="93" r="2.8"/>
+        <text class="tl-name" x="30" y="96">review</text>
+        <text class="tl-who dev" x="146" y="96">开发 · 交验</text>
+
+        <circle class="tl-dot dev" cx="20" cy="115" r="2.8"/>
+        <text class="tl-name" x="30" y="118">done</text>
+        <text class="tl-who dev" x="146" y="118">开发 · 验后关单</text>
+      </g>
+    </g>
+
+    <!-- 流程里的验收关口（与待办列表的最后一格呼应） -->
+    <path class="slink" d="M504 452 L530 452"/>
+    <path class="tgate" d="M540 442 L550 452 L540 462 L530 452 Z"/>
+    <text class="tgate-t" x="540" y="480">验收通过</text>
+
+  </svg>
+
+  <div class="legend">
+    <span><b>机器人</b> = 角色（形状即职责）</span>
+    <span><b>物件</b> = 环境（设备 / 工具 / 产物）</span>
+    <span><i></i>流转</span>
+    <span><i class="obs"></i>只读观察</span>
+    <span><i class="opt"></i>自我优化回路</span>
+    <span><i class="ret"></i>真机体验反馈</span>
+    <span><b style="color:#e6a0c4">●</b> 需求整理 / <b style="color:#7aa2f7">●</b> 开发 · 写入（调度只读）</span>
+  </div>
+
+  <div class="tray">
+    <div class="tray-h">视野中的其他对象</div>
+    <div class="tray-g" id="tray"></div>
+  </div>
+
+  <div class="hint">点击任一角色、物体或待办列表，查看职责与执行流程</div>
+
+  <div class="maint">
+    <span class="chip"><b>零崩溃门槛</b>连开 3 次</span>
+    <span class="chip"><b>发布包冒烟</b>装要发的包</span>
+    <span class="chip red"><b>提交前拦截</b>UI 文案</span>
+    <span class="chip warn"><b>巡检脚本</b>三线对照</span>
+    <span class="chip warn"><b>健康度</b>分支 / 缓存 / 工作区</span>
+    <span class="chip"><b>待办列表</b>调度只读</span>
+  </div>
+</div>
+
+<div id="backdrop"></div>
+<aside id="sheet" aria-live="polite">
+  <div class="x" id="close">×</div>
+  <h2 id="s-title"></h2>
+  <div class="role-tag" id="s-tag"></div>
+  <div id="s-body"></div>
+</aside>
+
+<script>
+const SYM = {
+  phone:'<symbol id="t-phone" viewBox="0 0 32 40"><rect x="4" y="2" width="24" height="36" rx="5"/><rect x="7" y="6.5" width="18" height="24" rx="2" fill="#20252a" stroke="none"/><path d="M13 4.4h6"/><circle cx="16" cy="34" r="1.6"/></symbol>',
+  branch:'<symbol id="t-branch" viewBox="0 0 32 40"><rect x="3" y="4" width="26" height="32" rx="4"/><circle cx="11" cy="13" r="2.6"/><circle cx="11" cy="27" r="2.6"/><circle cx="21" cy="20" r="2.6"/><path d="M11 15.6v8.8M13.6 13h4.8a3.4 3.4 0 0 1 3.4 3.4v1"/></symbol>',
+  folder:'<symbol id="t-folder" viewBox="0 0 32 40"><path d="M3 10.4a2.4 2.4 0 0 1 2.4-2.4h6.2l2.8 3.2h12.2a2.4 2.4 0 0 1 2.4 2.4v15.2a2.4 2.4 0 0 1-2.4 2.4H5.4A2.4 2.4 0 0 1 3 28.8z"/><path d="M3 14.6h26"/></symbol>',
+  disk:'<symbol id="t-disk" viewBox="0 0 32 40"><rect x="3" y="13" width="26" height="14" rx="3"/><path d="M3 17.4h26"/><circle cx="24" cy="22.6" r="1.5"/><path d="M7 22.6h10"/></symbol>',
+  mail:'<symbol id="t-mail" viewBox="0 0 32 40"><rect x="3" y="11" width="26" height="18" rx="3"/><path d="M4.2 12.6L16 21.6l11.8-9"/></symbol>',
+  browser:'<symbol id="t-browser" viewBox="0 0 32 40"><rect x="2" y="8" width="28" height="24" rx="3"/><path d="M2 15h28"/><circle cx="6" cy="11.5" r="1"/><circle cx="9.4" cy="11.5" r="1"/><circle cx="12.8" cy="11.5" r="1"/><path d="M6 19.4h20M6 23.4h14M6 27.4h17"/></symbol>',
+  doc:'<symbol id="t-doc" viewBox="0 0 32 40"><path d="M7 4h12l7 7v25H7z"/><path d="M19 4v7h7"/><path d="M10.6 17h11.2M10.6 21.4h11.2M10.6 25.8h6.6"/></symbol>',
+  cards:'<symbol id="t-cards" viewBox="0 0 32 40"><rect x="7" y="4" width="18" height="7" rx="2"/><rect x="5.5" y="14" width="21" height="7" rx="2"/><rect x="4" y="24" width="24" height="7" rx="2"/></symbol>',
+  log:'<symbol id="t-log" viewBox="0 0 32 40"><rect x="6" y="4" width="20" height="30" rx="3"/><path d="M10 11h12M10 16h12M10 21h8"/><path d="M6 30h20"/></symbol>',
+  clip:'<symbol id="t-clip" viewBox="0 0 32 40"><rect x="6" y="7" width="20" height="27" rx="3"/><rect x="12" y="3.6" width="8" height="5.6" rx="1.8"/><path d="M10.4 17h11.2M10.4 22h8"/></symbol>',
+  term:'<symbol id="t-term" viewBox="0 0 32 40"><rect x="2" y="7" width="28" height="26" rx="3"/><path d="M2 13.4h28"/><circle cx="6.2" cy="10.2" r="1"/><circle cx="9.4" cy="10.2" r="1"/><circle cx="12.6" cy="10.2" r="1"/><path d="M7.4 18.4l3.4 2.8-3.4 2.8"/><path d="M13.4 24h6.4"/></symbol>'
+};
+
+const TRAY = [
+  ['chat','HTalk 群','chat'],['notice','群公告','notice'],
+  ['worktree','工作区','folder'],['branches','三线分支','branch'],['cache','构建缓存','disk'],
+  ['attach','群附件','mail'],['site','预览站','browser'],['manifest','线上清单','doc'],
+  ['queue','任务队列','cards'],['logs','运行日志','log'],['clipboard','剪贴板','clip'],['gate','门禁脚本','term']
+];
+
+const DATA = {
+  chat:{name:"HTalk 群 · 共享上下文",tag:"所有角色读写的同一份现场",
+    duty:["需求、判断、证据、争议全部在群里，不在私聊里","一条消息就是一个可引用的锚点（seq / ref）","新人（或新 agent）进来读历史即可接上下文，不用重新问一遍"],
+    flow:["房主发一句话 + 一张截图 → 这就是需求原文","需求整理直接建单写进待办 → 调度只读这张表来派单","交付贴证据（dump / sha / 像素）→ 任何人可复核","不通过就在原线程里退，理由留在同一处"],
+    out:["可追溯的决策链","可复用的上下文"],
+    note:"今天几次「以为改了其实没合」，都是因为群里说的是「我以为」而不是「sha 是多少」——群能把话说清，前提是每条都带证据。"},
+
+  notice:{name:"群公告（约定）",tag:"全群共同遵守的规则页",
+    duty:["分工、协作方式、发版门槛、红线都写在公告里","每次改动带 rev 号，谁都能看到版本"],
+    flow:["出现反复踩的坑 → 写成规则","带 --if-rev 更新，避免覆盖别人的修改","变更自动通知全群"],
+    out:["可执行的约定（不是口号）"],
+    note:"公告里的每条几乎都对应一次事故：红线来自差点打扰真实用户，发布四步来自一次链路断掉。"},
+  owner:{name:"房主",tag:"需求来源 · 最终裁决",
+    duty:["提需求、定优先级","对「对外发布 / 账号证书 / 真机 / 预算」拍板","验收成果，提出体验问题"],
+    flow:["提一个需求（常常一句话 + 一张截图）","看到判断依据与证据，而不是话术","决定发不发、要不要改方向"],
+    out:["需求与口径","发布许可"],
+    note:"需求方给的「现象」不等于「根因」，调度负责翻译成可验证的判据。"},
+  me:{name:"调度 · 机器人",tag:"只读待办 · 决策 · 裁决 · 指派",
+    duty:["对待办列表只有读权限：不建单、不改状态、不关单","读表定优先级（1 跑 + 1 排队），派给唯一 owner","指派项目开发去更新待办状态，自己不动笔","裁决红项归属：产品 bug / 断言打偏 / 环境 / 版本没合","不可逆操作把关：删分支、删 worktree、force push","对房主汇报；公告与 skill 终审"],
+    flow:["读待办列表 → 挑一件、定优先级","翻译成「可量、且改坏它会转红」的判据","派给唯一 owner，并指派它更新待办状态","收交付 → 交叉验证证据是否自洽","决定合并或退回；把坑写进规则/脚本"],
+    out:["派单 + 判据","指派指令","裁决结论","公告 / skill / 脚本 diff"],
+    note:"待办列表对它只有读权限：建单归需求整理，改状态归项目开发。它读表、判优先级、派单、裁决；表的每一次变更都由被指派的人落笔。"},
+  flow:{name:"观察 · 机器人",tag:"只读 · 出事实，不做决定",
+    duty:["巡检摘要：谁在跑、谁卡、卡在哪一环","阻塞归因：红项算谁的，给文件:行 / 日志证据","队列卫生：同源任务重复、done 但没交付","判据审计：新任务是否可量"],
+    flow:["跑 patrol.sh 拿一屏事实","比对分支与主线：谁落后、谁推了没合","异常归类，附证据，不附命令","出清单报给调度"],
+    out:["巡检摘要","归因表","时间利用报表"],
+    note:"硬边界：不派活、不合并、不碰生产分支、不直接找房主。"},
+  rule:{name:"规则 · 脚本 · Skill",tag:"复盘 → 固化 → 反哺派单",
+    duty:["把踩过的坑写成可执行判据","把重复动作固化成脚本","把知识写进 skill"],
+    flow:["观察者给出归因","判断是「人的疏忽」还是「流程缺检查」","沉淀成脚本 / 门槛 / 判据","下一轮派单直接引用"],
+    out:["patrol.sh","device-auth","pre_push_gate","判据三底线"],
+    note:"代码会变，规则和脚本留下来。"},
+  dev:{name:"项目开发 · 机器人",tag:"双端并行 · 一文件一 owner",
+    duty:["Android 与 iOS 各有人，同一时刻可以并行推进","受调度指派更新待办：领活→in_progress，交付→review，验后→done","不擅自改状态，每一次变更都来自一次明确指派","一 agent 一 worktree，只改自己负责的文件","能编译就提交，预算耗尽也要留可编译状态"],
+    flow:["读基线 → 定位（大文件按段读，避免 OOM）","改一小步 → 编译 → 再改","设备实测取证：dump / 截图 / bounds / pbpaste","push 分支 → 报 commit sha + 判据结果"],
+    out:["双端 feature 分支","证据：像素值 / bounds / 原始 JSON"],
+    note:"禁止「默认空实现」兜底；跨文件调用链必须设备实测。iOS 版本号常是 1.0，必须报二进制 sha。"},
+
+  "env-dev":{name:"设备 · 分支 · 工作区",tag:"开发的操作对象",
+    duty:["Android 模拟器 / iOS 两台模拟器：取证与复现","分支：承载一次需求的改动范围","工作区：一 agent 一 worktree，互不干扰"],
+    flow:["装包 → 授权（装包会消耗授权）","取证 → 提证据","分支 → 推远端 → 交验收"],
+    out:["设备证据","可合并分支"],
+    note:"iOS 同时最多 boot 2 台、只能一台 xcodebuild；Android 用 wm density 复现真机差异。"},
+
+  "dev-android":{name:"开发 · 机器人（Android）",tag:"两件并行 · 一文件一 owner",
+    duty:["只改 Android 目录下自己负责的文件","独立 worktree，不碰别人的未提交改动","能编译就提交"],
+    flow:["读基线 → 定位（大文件按段读）","改一小步 → 编译 → 再改","设备实测：dump / 截图 / bounds","push 分支 → 报 sha + 判据结果"],
+    out:["feature 分支","像素值 / bounds / 原始 JSON"],
+    note:"禁止「默认空实现」兜底；跨文件调用链必须设备实测。"},
+  "dev-ios":{name:"开发 · 机器人（iOS）",tag:"两台模拟器轮流用",
+    duty:["只改 iOS 目录","同一时刻只允许一台 xcodebuild","装包后自验"],
+    flow:["改 SwiftUI 视图","构建 → 装模拟器 → 授权","取证：simctl pbpaste / 日志 / 像素","push → 报 commit + 二进制 sha"],
+    out:["feature 分支","装包信息（sha / 时间 / 会话名）"],
+    note:"版本号常常都是 1.0，分不出新旧——必须报二进制 sha。"},
+  verify:{name:"验收 · 机器人",tag:"唯一的放行口",
+    duty:["合并分支、解冲突（默认取功能超集）","编译 + 跑门禁 + 装包 + 截图","出包，并在发布包上复验"],
+    flow:["收分支 → 查 merge-base 是否真 IN","合并 → 两端编译","跑零崩溃门槛 / phase1 / 发布包冒烟","红项分类后回报","全绿出包，附三线状态表"],
+    out:["gate / preview 包","红项清单（带证据）","三线状态表"],
+    note:"没测到 ≠ 通过；门槛拦下来时不许 --no-verify 绕过。"},
+  build:{name:"出包（产物）",tag:"版本号 · sha · size",
+    duty:["产出版本号、sha256、size","包作为群附件发出，不贴本地路径","区分门禁包与发布包"],
+    flow:["构建 → 记录三件套","上传群附件","发布方自己取最新签名 URL"],
+    out:["APK / 包","三条元数据"],
+    note:"跨机器传路径必断。"},
+  publish:{name:"发布（站点）",tag:"上传 + 回读清单",
+    duty:["下载 → 校验 sha / size → 上传","回读线上清单核对四条字段","对不上就停手"],
+    flow:["取最新签名 URL","校验 sha256 与 size","上传 → 回读清单","核对四条字段"],
+    out:["线上清单（已核对）"],
+    note:"签名 URL 约 20 分钟过期。"},
+  "env-android":{name:"模拟器 · 分支 · 工作区",tag:"Android 的操作对象",
+    duty:["模拟器：dump / 截图 / 改 density 复现真机差异","分支：承载一次需求的改动范围","工作区：一 agent 一 worktree"],
+    flow:["装包 → 授权（装包会消耗授权）","取证 → 提证据","分支 → 推远端 → 交验收"],
+    out:["设备证据","可合并分支"],
+    note:"真机与模拟器最大差别是 density / 字体缩放 / 分辨率。"},
+  "env-ios":{name:"两台模拟器 · 分支 · 工作区",tag:"iOS 的操作对象",
+    duty:["最多 boot 2 台，只能一台在 xcodebuild","一 agent 一设备","分支与工作区同 Android"],
+    flow:["构建 → 装指定设备 → 启动","授权（缺 Keychain entitlement 会 -34018）","取证 → 提证据"],
+    out:["设备证据","可合并分支"],
+    note:"两个 agent 同时 xcodebuild 会打死 SpringBoard。"},
+  "env-build":{name:"门禁脚本 · 构建缓存",tag:"出包的支撑",
+    duty:["零崩溃门槛 / 发布包冒烟 / UI 文案拦截","构建缓存是最大的一块垃圾（单目录可达 13G）"],
+    flow:["push 前跑文案检查","合并后跑 phase1","出包后跑发布包冒烟"],
+    out:["PASS / FAIL / BLOCKED"],
+    note:"环境异常判 BLOCKED，不回落 PASS。"},
+  "env-publish":{name:"线上清单 · 群附件",tag:"用户实际拿到什么",
+    duty:["群附件是跨机器传包的唯一通路","清单是「线上到底是什么」的唯一凭据"],
+    flow:["上传产物","回读清单四条字段","对不上停手"],
+    out:["可下载链接 + 已核对清单"],
+    note:"附件链接 20 分钟过期。"},
+  worktree:{name:"工作区（文件夹）",tag:"一 agent 一目录",
+    duty:["每个 agent 一个独立 worktree","未提交改动是最大风险点"],
+    flow:["开工前确认 HEAD 与分支","dirty 就提交，别裸着","收工保留可编译状态"],
+    out:["可复现的工作区"],
+    note:"别人 worktree 里的未提交改动不要动，也不要替人提交。"},
+  branches:{name:"三线分支（分支板）",tag:"android / ios / verify",
+    duty:["android 线只合 Android 支，ios 线只合 iOS 支","verify 转只读基线"],
+    flow:["看 behind / ahead","MISSING 要判断「真丢了」还是「已被等价覆盖」"],
+    out:["各线 head + 落后关系"],
+    note:"今天两次「以为改了其实没合」都出在这里。"},
+  cache:{name:"构建缓存（磁盘）",tag:"DerivedData / build",
+    duty:["用于增量构建，也会无限膨胀","每次 xcodebuild 再叠一层"],
+    flow:["清理前确认没有构建在跑","只删 2 小时以上未动的","保留最近一次用于复现"],
+    out:["回收的磁盘空间"],
+    note:"实测单个 /tmp/hv-ios-build 到过 13G。"},
+  attach:{name:"群附件（信封）",tag:"跨机器传包",
+    duty:["出包方把包发群附件","发布方自己取最新签名 URL"],
+    flow:["上传附件","对方拉最新链接","下载后校验 sha / size"],
+    out:["可下载的包"],
+    note:"链接 20 分钟过期；转发别人贴的链接会 403。"},
+  site:{name:"预览站（浏览器）",tag:"可访问的线上页面",
+    duty:["承载预览包的下载与说明","对用户可见，代表产品状态"],
+    flow:["上传产物","更新清单","回读校验"],
+    out:["可访问链接"],
+    note:"预览版要标注已知问题。"},
+  manifest:{name:"线上清单（文档）",tag:"四条字段",
+    duty:["versionCode / versionName / sha256 / size"],
+    flow:["上传后 HTTP 回读","逐条核对","不一致停手"],
+    out:["已核对清单"],
+    note:"传上去不等于发布成功。"},
+  queue:{name:"任务队列（卡片堆）",tag:"1 跑 + 1 排队",
+    duty:["同一时刻最多两件","同源需求合并成一条"],
+    flow:["派单前查队列深度","已消费的记录 delete","done 但没交付的要揪出来"],
+    out:["干净的队列"],
+    note:"今天一个 agent 堆到 5 条，所有任务一起变慢。"},
+  todo:{name:"待办列表",tag:"需求整理建单 · 调度只读 · 开发受指派更新",
+    duty:["一张表列出四个状态：todo / in_progress / review / done","需求整理直接操作：建单（todo）+ 维护条目","调度只有读权限：巡检谁卡住、谁 done 了却没交付、谁自报完成","项目开发受调度指派才更新状态，不擅自改表"],
+    flow:["房主提需求 → 需求整理直接建单 → todo","调度只读这张表 → 派单并指派项目开发去更新","领活（受指派）→ in_progress","贴证据交付（受指派）→ review","验收门禁通过、调度指派 → 开发关单 → done"],
+    out:["一眼可见的待办状态表","谁改的、何时改的记录","不会「自报完成」的交付链"],
+    note:"读写权是分开的：需求整理写建单那一格，项目开发写状态推进，调度只读不写。这样「完成」既不是开发自报，也不是读表的人顺手关的，而是验收通过后再由调度指派开发落笔。"},
+  intake:{name:"需求整理 · 机器人",tag:"直接操作待办列表 · 建单 / 维护",
+    duty:["专门接住房主一句话 + 截图式的原始需求","补齐上下文，拆成结构化待办：范围、判据、不许碰的文件","直接写进待办列表建单（todo），并维护条目","替调度卸掉「原始需求 → 可执行任务」这段脏活","不派单、不动代码；有歧义回群问一句，不自己拍板"],
+    flow:["房主在群里提需求（常常就一句话 + 一张截图）","整理 agent 补齐上下文、拆成一条条待办","直接写进待办列表，状态置为 todo","调度只读这张表来派单；需求说不清就回群问"],
+    out:["已建单的待办（todo）","补齐的上下文与证据引用"],
+    note:"它是待办列表的写入方之一：建单和维护都由它直接落笔，不再经调度转手。调度因此只剩读和派，压力被卸到这一层。"},
+  logs:{name:"运行日志（纸卷）",tag:"判断活没活的唯一证据",
+    duty:["daemon 日志能看出 agent 在不在动","CPU / mtime 都可能骗人"],
+    flow:["grep tool open/close","看最后一次调用时间","超过 30 分钟静默才可疑"],
+    out:["活/挂的判断"],
+    note:"文件 mtime 最不可信——长任务写盘是间歇的。"},
+  clipboard:{name:"剪贴板",tag:"最容易假通过的地方",
+    duty:["复制类功能必须读回内容验证","不能只看有没有 toast"],
+    flow:["点击 → 读回剪贴板","核对格式（引用应是定位串而非正文）"],
+    out:["实际内容原文"],
+    note:"代码写了、内容为空或格式错，是这类功能的常见失败。"},
+  gate:{name:"门禁脚本（终端）",tag:"自动化的关口",
+    duty:["零崩溃 / 发布包冒烟 / UI 文案拦截","按改动范围扫，共用文件才全仓扫"],
+    flow:["push 前跑","输出文件:行 + 命中词 + 所属端","红了就修，不许绕过"],
+    out:["PASS / FAIL / BLOCKED"],
+    note:"会假绿的门槛比没有门槛更危险。"},
+
+  device:{name:"真机（房主手机）",tag:"最终验证的地方",
+    duty:["装发布包，按真实用户路径走一遍","发现模拟器复现不了的问题：density / 字体缩放 / 手势","反馈「看起来不对」——哪怕说不出原因"],
+    flow:["拿到预览包 → 装机","用真实场景走：进会话、发消息、复制、切主题","把现象（截图 + 一句话）发回来"],
+    out:["真实体验反馈","新一批需求"],
+    note:"真机与模拟器的差别不在逻辑，在观感：字号、间距、动画手感、颜色对比。今天「气泡太黑」「输入条浮着」都只有真机才看得出来。"}
+};
+
+// 注入托盘用 symbol
+const defs = document.createElementNS('http://www.w3.org/2000/svg','svg');
+defs.setAttribute('style','position:absolute;width:0;height:0;overflow:hidden');
+defs.innerHTML = '<defs>'+Object.values(SYM).join('')+'</defs>';
+document.body.appendChild(defs);
+
+const trayEl = document.getElementById('tray');
+TRAY.forEach(([k,label,icon])=>{
+  const d = document.createElement('div');
+  d.className = 'item'; d.dataset.k = k;
+  d.innerHTML = `<svg viewBox="0 0 32 40" fill="#1a1e22" stroke="#7d8288" stroke-width="1.3"
+      stroke-linecap="round" stroke-linejoin="round"><use href="#t-${icon}"/></svg><div class="n">${label}</div>`;
+  d.addEventListener('click', ()=>open(k,d));
+  trayEl.appendChild(d);
+});
+
+const sheet = document.getElementById('sheet');
+const backdrop = document.getElementById('backdrop');
+let activeEl = null;
+
+function open(key, el){
+  const d = DATA[key]; if(!d) return;
+  document.getElementById('s-title').textContent = d.name;
+  document.getElementById('s-tag').textContent = d.tag;
+  document.getElementById('s-body').innerHTML = `
+    <div class="sec"><h3>职责</h3><ul>${d.duty.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="sec"><h3>执行流程</h3><div class="flowline">${d.flow.map(x=>`<div class="step">${x}</div>`).join('')}</div></div>
+    <div class="sec"><h3>产出</h3><ul>${d.out.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="sec"><h3>边界 / 注意</h3><div class="note">${d.note}</div></div>`;
+  sheet.classList.add('open'); backdrop.classList.add('on');
+  if(activeEl) activeEl.classList.remove('active');
+  activeEl = el; if(el) el.classList.add('active');
+}
+function close(){
+  sheet.classList.remove('open'); backdrop.classList.remove('on');
+  if(activeEl) activeEl.classList.remove('active'); activeEl = null;
+}
+document.querySelectorAll('.hit').forEach(el=>el.addEventListener('click', ()=>open(el.dataset.k, el)));
+document.getElementById('close').addEventListener('click', close);
+backdrop.addEventListener('click', close);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+
+// 观察扫描：随机时刻模拟「发现问题」——变红、暂停转动、收窄张角，2s 后恢复
+(function(){
+  const sweep = document.getElementById('sweep');
+  if(!sweep) return;
+  function cycle(){
+    const wait = 5000 + Math.random()*9000;
+    setTimeout(()=>{
+      sweep.classList.add('alert');
+      setTimeout(()=>{
+        sweep.classList.remove('alert');
+        cycle();
+      }, 2000);
+    }, wait);
+  }
+  cycle();
+})();
+</script>
+</body>
+</html>
