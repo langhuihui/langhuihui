@@ -52,6 +52,7 @@
   .dot.g{fill:var(--ok)}
   .dot.y{fill:var(--opt)}
   .dot.w{fill:#a9aeb4}
+  .dot.talk{fill:#9fc4d6}
 
   .ret{fill:none;stroke:#a9aeb4;stroke-width:1.3;stroke-opacity:.55}
   .back{fill:none;stroke:#e7796e;stroke-width:1.3;stroke-opacity:.5;stroke-dasharray:5 6;
@@ -59,7 +60,9 @@
   .backlbl{fill:#c07b72;font-size:9.5px;letter-spacing:.08em}
   .dot.r{fill:#e7796e}
   .dot.up{fill:#a9c9d6}
-  .flow.up{stroke-dasharray:2 6}
+  .talk{fill:none;stroke:#9fc4d6;stroke-width:1.2;stroke-opacity:.6;
+        stroke-dasharray:2 5;animation:dash 3.8s linear infinite}
+  .talklbl{fill:#9fc4d6;fill-opacity:.8;font-size:9px;letter-spacing:.08em}
   .stag{fill:#7d8288;font-size:9px;letter-spacing:.08em}
   .retlbl{fill:#7d8288;font-size:9.5px;letter-spacing:.12em;text-anchor:middle}
 
@@ -234,6 +237,9 @@
       <marker id="arwIntake" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
         <path d="M0,0 L8,4 L0,8 z" fill="#e6a0c4" opacity=".9"/>
       </marker>
+      <marker id="arwTalk" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto">
+        <path d="M0,0 L8,4 L0,8 z" fill="#9fc4d6" opacity=".9"/>
+      </marker>
 
       <!-- 机器人 -->
       <symbol id="i-bot" viewBox="0 0 24 24">
@@ -404,11 +410,9 @@
     <text class="stag" x="534" y="56">提需求</text>
     <text class="stag intake" x="350" y="112" style="text-anchor:middle">建单 · 直接写表</text>
 
-    <!-- 调度 ⇄ 开发：右侧派单（含指派改表），左侧交付 -->
+    <!-- 调度 → 开发：派单（含指派改表） -->
     <path id="p1" class="flow" d="M492 194 L492 256" marker-end="url(#arw4)"/>
     <text class="stag" x="502" y="232">派单 · 指派更新</text>
-    <path id="p1b" class="flow up" d="M446 258 L446 198" marker-end="url(#arw4)"/>
-    <text class="stag" x="434" y="232" style="text-anchor:end">交付</text>
 
     <!-- 调度发起验收（左侧绕行） -->
     <path id="p1c" class="flow" d="M440 192 C 370 196, 286 236, 272 300 C 258 366, 320 414, 424 424"
@@ -429,17 +433,21 @@
           marker-end="url(#arw2)"/>
     <text class="retlbl" transform="translate(120,470) rotate(-90)"> 发布 → 真机体验 → 反馈 </text>
 
+    <!-- 房主 → 观察：在群里商讨流程缺陷（观察者不主动找房主，故单向） -->
+    <path id="d0" class="talk" d="M462 50 L462 40 Q462 36 468 36 L796 36 Q802 36 802 42 L802 148"
+          marker-end="url(#arwTalk)"/>
+    <text class="talklbl" x="690" y="50" style="text-anchor:middle">商讨流程缺陷</text>
 
     <!-- 流动点 -->
     <circle class="dot" r="2.3"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#p0a"/></animateMotion></circle>
     <circle class="dot intakew" r="2.3"><animateMotion dur="2.4s" repeatCount="indefinite" begin=".4s"><mpath href="#p0b"/></animateMotion></circle>
     <circle class="dot" r="2.3"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#p1"/></animateMotion></circle>
-    <circle class="dot up" r="2.3"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#p1b"/></animateMotion></circle>
     <circle class="dot up" r="2.2"><animateMotion dur="3.4s" repeatCount="indefinite" begin=".4s"><mpath href="#p1c"/></animateMotion></circle>
     <circle class="dot" r="2.5"><animateMotion dur="1.9s" repeatCount="indefinite"><mpath href="#p3"/></animateMotion></circle>
     <circle class="dot g" r="2.5"><animateMotion dur="1.9s" repeatCount="indefinite"><mpath href="#p4"/></animateMotion></circle>
     <circle class="dot r" r="2.3"><animateMotion dur="4.6s" repeatCount="indefinite"><mpath href="#b0"/></animateMotion></circle>
     <circle class="dot w" r="2.3"><animateMotion dur="6.2s" repeatCount="indefinite"><mpath href="#r0"/></animateMotion></circle>
+    <circle class="dot talk" r="2.1"><animateMotion dur="4.6s" repeatCount="indefinite" begin=".6s"><mpath href="#d0"/></animateMotion></circle>
 
     <!-- 房主 + 真机 -->
     <g class="hit" data-k="device">
